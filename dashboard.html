@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>متجري — الداشبورد</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; font-family: 'Noto Kufi Arabic', sans-serif; color: white; min-height: 100vh; }
+  .header {
+    background: #0f0f0f; border-bottom: 1px solid #1a1a1a;
+    padding: 14px 24px; display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-logo { color: #e8a04a; font-weight: 900; font-size: 18px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .user-email { color: #444; font-size: 12px; }
+  .btn-sm {
+    background: #1a1a1a; border: 1px solid #1f1f1f; border-radius: 8px;
+    padding: 6px 14px; color: #555; font-family: inherit; font-size: 12px; cursor: pointer;
+  }
+  .btn-link {
+    background: #e8a04a15; border: 1px solid #e8a04a40; border-radius: 8px;
+    padding: 6px 14px; color: #e8a04a; font-family: inherit; font-size: 12px;
+    cursor: pointer; text-decoration: none; font-weight: 700;
+  }
+  .main { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: #141414; border: 1px solid #1f1f1f; border-radius: 14px; padding: 16px; }
+  .stat-val { font-size: 22px; font-weight: 900; }
+  .stat-lbl { font-size: 11px; color: #444; margin-top: 3px; }
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 8px 14px; border-radius: 50px; border: 1px solid #1f1f1f;
+    background: transparent; color: #555; font-family: inherit;
+    font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s;
+  }
+  .filter-btn.active { border-color: #e8a04a; background: #e8a04a15; color: #e8a04a; }
+  .slot-group { margin-bottom: 24px; }
+  .slot-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .slot-badge {
+    background: #e8a04a20; border: 1px solid #e8a04a40;
+    border-radius: 10px; padding: 6px 14px; color: #e8a04a; font-weight: 800; font-size: 14px;
+  }
+  .slot-count { color: #333; font-size: 12px; }
+  .slot-line { flex: 1; height: 1px; background: #1a1a1a; }
+  .wa-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: #25D36615; border: 1px solid #25D36640; border-radius: 10px;
+    padding: 7px 14px; color: #25D366; font-weight: 700; font-size: 12px;
+    text-decoration: none; flex-shrink: 0;
+  }
+  .area-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .area-chip {
+    display: flex; align-items: center; gap: 5px;
+    background: #1a1a2e; border: 1px solid #3b82f630;
+    border-radius: 50px; padding: 4px 12px;
+  }
+  .area-chip-count {
+    background: #3b82f6; color: white; border-radius: 50%;
+    width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 900;
+  }
+  .orders-list { display: flex; flex-direction: column; gap: 10px; }
+  .order-row {
+    background: #141414; border: 1px solid #1f1f1f; border-radius: 14px;
+    padding: 16px 18px; display: flex; align-items: center; gap: 16px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .order-row:hover { background: #1a1a1a; }
+  .order-info { flex: 1; }
+  .order-name { color: white; font-weight: 800; font-size: 14px; }
+  .order-items { color: #444; font-size: 12px; margin: 3px 0; }
+  .order-meta { display: flex; align-items: center; gap: 8px; }
+  .badge {
+    padding: 2px 8px; border-radius: 50px; font-size: 11px; font-weight: 700;
+  }
+  .order-total { text-align: center; }
+  .order-total-val { color: #e8a04a; font-weight: 900; font-size: 15px; }
+  .order-total-kwd { color: #333; font-size: 10px; }
+  .action-btn {
+    border: 1px solid; border-radius: 8px; padding: 7px 12px;
+    font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; flex-shrink: 0;
+  }
+  .empty { text-align: center; padding: 60px; color: #333; font-size: 14px; }
+  .loading { text-align: center; padding: 60px; color: #e8a04a; font-size: 16px; font-weight: 700; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #0f0f0f; border: 1px solid #1f1f1f; border-radius: 24px;
+    padding: 28px; width: 100%; max-width: 380px;
+  }
+  .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+  .modal-title { color: white; font-weight: 900; font-size: 17px; }
+  .modal-close {
+    background: #141414; border: none; border-radius: 50%;
+    width: 32px; height: 32px; color: #555; cursor: pointer; font-size: 16px;
+  }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .modal-stat { background: #050505; border-radius: 12px; padding: 14px; }
+  .modal-stat-lbl { color: #333; font-size: 11px; margin-bottom: 4px; }
+  .modal-stat-val { color: white; font-weight: 800; }
+  .modal-btn {
+    width: 100%; border: 1px solid; border-radius: 12px; padding: 13px;
+    font-family: inherit; font-weight: 800; font-size: 14px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🍽️ داشبورد المتجر</div>
+  <div class="header-right">
+    <span class="user-email" id="userEmail"></span>
+    <a href="store.html" class="btn-link" id="storeLink" target="_blank">🔗 رابط متجري</a>
+    <button class="btn-sm" onclick="logout()">خروج</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="stats">
+    <div class="stat-card"><div class="stat-val" id="statNew" style="color:#f59e0b">0</div><div class="stat-lbl">جديد</div></div>
+    <div class="stat-card"><div class="stat-val" id="statPrep" style="color:#3b82f6">0</div><div class="stat-lbl">قيد التحضير</div></div>
+    <div class="stat-card"><div class="stat-val" id="statDone" style="color:#22c55e">0</div><div class="stat-lbl">مكتمل</div></div>
+    <div class="stat-card"><div class="stat-val" id="statRev" style="color:#e8a04a">0</div><div class="stat-lbl">إيراد اليوم KWD</div></div>
+  </div>
+
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-btn active" onclick="setFilter('all')">كل الأيام</button>
+  </div>
+
+  <div id="ordersContainer"><div class="loading">⏳ جاري تحميل الطلبات...</div></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-grid" id="modalGrid"></div>
+    <div id="modalActions"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, orderBy, getDoc }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA9aysxwa-S7GmRbBxjOTrjgOG4_c3fT4k",
+    authDomain: "matgary-2f25f.firebaseapp.com",
+    projectId: "matgary-2f25f",
+    storageBucket: "matgary-2f25f.firebasestorage.app",
+    messagingSenderId: "360734383265",
+    appId: "1:360734383265:web:e9dbf5f3048fecb76ea4e0",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let allOrders = [];
+  let currentFilter = "all";
+  let storeSlug = "";
+  let selectedOrder = null;
+
+  const orderTotal = (items) => items?.reduce((s, i) => s + i.price * i.qty, 0) || 0;
+
+  const STATUS = {
+    new:      { label: "جديد",        color: "#f59e0b", bg: "#fef3c720", icon: "🔔" },
+    preparing:{ label: "قيد التحضير", color: "#3b82f6", bg: "#eff6ff20", icon: "👩‍🍳" },
+    done:     { label: "مكتمل",       color: "#22c55e", bg: "#f0fdf420", icon: "✅" },
+  };
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return window.location.href = "index.html";
+
+    document.getElementById("userEmail").textContent = user.email;
+
+    // Get store info
+    const storeDoc = await getDoc(doc(db, "stores", user.uid));
+    if (storeDoc.exists()) {
+      storeSlug = storeDoc.data().slug;
+      document.getElementById("storeLink").href = `store.html?store=${storeSlug}`;
+    }
+
+    // Real-time orders
+    const q = query(
+      collection(db, "orders"),
+      where("storeId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+
+    onSnapshot(q, (snapshot) => {
+      allOrders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderAll();
+    });
+  });
+
+  window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
+
+  window.setFilter = (date) => {
+    currentFilter = date;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    event.target.classList.add("active");
+    renderOrders();
+  };
+
+  window.updateStatus = async (id, status) => {
+    await updateDoc(doc(db, "orders", id), { status });
+  };
+
+  window.openModal = (order) => {
+    selectedOrder = order;
+    const st = STATUS[order.status] || STATUS.new;
+    document.getElementById("modalTitle").textContent = order.id?.slice(-6) || "طلب";
+    document.getElementById("modalGrid").innerHTML = `
+      <div class="modal-stat"><div class="modal-stat-lbl">👤 الزبون</div><div class="modal-stat-val">${order.customerName}</div></div>
+      <div class="modal-stat"><div class="modal-stat-lbl">📞 الهاتف</div><div class="modal-stat-val">${order.customerPhone}</div></div>
+      <div class="modal-stat"><div class="modal-stat-lbl">📍 المنطقة</div><div class="modal-stat-val">${order.area}</div></div>
+      <div class="modal-stat"><div class="modal-stat-lbl">💰 الإجمالي</div><div class="modal-stat-val">${orderTotal(order.items).toFixed(3)} KWD</div></div>
+    `;
+    const actions = document.getElementById("modalActions");
+    actions.innerHTML = `
+      <a href="https://wa.me/965${order.customerPhone}" target="_blank"
+        style="display:block;text-align:center;background:#25D36615;color:#25D366;border:1px solid #25D36640;border-radius:12px;padding:12px;font-weight:700;font-size:14px;text-decoration:none;margin-bottom:10px">
+        💬 تواصل عبر واتساب
+      </a>
+      ${order.status === "new" ? `<button class="modal-btn" onclick="updateStatus('${order.id}','preparing')" style="background:#3b82f615;color:#3b82f6;border-color:#3b82f630">👩‍🍳 ابدأ التحضير</button>` : ""}
+      ${order.status === "preparing" ? `<button class="modal-btn" onclick="updateStatus('${order.id}','done')" style="background:#22c55e15;color:#22c55e;border-color:#22c55e30">✅ تم التسليم</button>` : ""}
+    `;
+    document.getElementById("modal").classList.add("open");
+  };
+
+  window.closeModal = (e) => {
+    if (e.target.id === "modal") document.getElementById("modal").classList.remove("open");
+  };
+
+  function buildWAMsg(date, time, orders) {
+    const sorted = [...orders].sort((a, b) => a.area?.localeCompare(b.area, "ar"));
+    let msg = `🚚 *طلبات المندوب*\n📅 ${date} — ⏰ ${time}\n━━━━━━━━━━━━━━━\n\n`;
+    let area = "";
+    sorted.forEach((o, i) => {
+      if (o.area !== area) { area = o.area; msg += `📍 *${area}*\n─────────────\n`; }
+      msg += `*${i+1}.* ${o.customerName}\n📞 ${o.customerPhone}\n`;
+      msg += `🛍️ ${o.items?.map(it => `${it.name} ×${it.qty}`).join(" | ")}\n`;
+      msg += `💰 ${orderTotal(o.items).toFixed(3)} KWD`;
+      msg += o.payment === "transfer" ? " — 🏦 تحويل ✅" : " — 💵 كاش";
+      if (o.lat && o.lng) msg += `\n🗺️ https://maps.google.com/?q=${o.lat},${o.lng}`;
+      msg += `\n\n`;
+    });
+    const cash = sorted.filter(o => o.payment !== "transfer").reduce((s, o) => s + orderTotal(o.items), 0);
+    msg += `━━━━━━━━━━━━━━━\n📦 إجمالي: ${sorted.length} طلبات\n`;
+    if (cash > 0) msg += `💵 كاش تحصّله: ${cash.toFixed(3)} KWD`;
+    return encodeURIComponent(msg);
+  }
+
+  function renderAll() {
+    // Stats
+    document.getElementById("statNew").textContent = allOrders.filter(o => o.status === "new").length;
+    document.getElementById("statPrep").textContent = allOrders.filter(o => o.status === "preparing").length;
+    document.getElementById("statDone").textContent = allOrders.filter(o => o.status === "done").length;
+    document.getElementById("statRev").textContent = allOrders.filter(o => o.status === "done").reduce((s, o) => s + orderTotal(o.items), 0).toFixed(3);
+
+    // Filter dates
+    const dates = [...new Set(allOrders.map(o => o.deliveryDate))].sort();
+    const bar = document.getElementById("filterBar");
+    bar.innerHTML = `<button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">كل الأيام</button>`;
+    dates.forEach(d => {
+      bar.innerHTML += `<button class="filter-btn ${currentFilter === d ? 'active' : ''}" onclick="setFilter('${d}')">${d}</button>`;
+    });
+
+    renderOrders();
+  }
+
+  function renderOrders() {
+    const filtered = currentFilter === "all" ? allOrders : allOrders.filter(o => o.deliveryDate === currentFilter);
+    const container = document.getElementById("ordersContainer");
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="empty">لا توجد طلبات بعد 📦</div>`;
+      return;
+    }
+
+    // Group by time
+    const grouped = {};
+    filtered.forEach(o => {
+      const key = `${o.deliveryDate}_${o.deliveryTime}`;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(o);
+    });
+
+    container.innerHTML = Object.keys(grouped).sort().map(key => {
+      const [date, time] = key.split("_");
+      const orders = grouped[key];
+
+      // Area summary
+      const areas = {};
+      orders.forEach(o => { areas[o.area] = (areas[o.area] || 0) + 1; });
+      const areaChips = Object.entries(areas).map(([a, c]) =>
+        `<div class="area-chip"><span style="font-size:11px">📍</span><span style="color:#60a5fa;font-size:12px;font-weight:700">${a}</span><span class="area-chip-count">${c}</span></div>`
+      ).join("");
+
+      const orderRows = orders.map(o => {
+        const st = STATUS[o.status] || STATUS.new;
+        return `
+          <div class="order-row" onclick='openModal(${JSON.stringify(o).replace(/'/g, "&#39;")})'>
+            <div class="order-info">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <span class="order-name">${o.customerName}</span>
+                <span class="badge" style="background:${st.bg};color:${st.color}">${st.icon} ${st.label}</span>
+              </div>
+              <div class="order-items">${o.items?.map(i => `${i.name} ×${i.qty}`).join("، ")}</div>
+              <div class="order-meta">
+                <span style="font-size:11px">📍</span>
+                <span style="color:#3b82f6;font-size:12px;font-weight:600">${o.area}</span>
+                <span style="color:#333;font-size:11px">·</span>
+                <span style="font-size:11px;font-weight:700;color:${o.payment === 'transfer' ? '#22c55e' : '#f59e0b'}">${o.payment === 'transfer' ? '🏦 تحويل' : '💵 كاش'}</span>
+              </div>
+            </div>
+            <div class="order-total">
+              <div class="order-total-val">${orderTotal(o.items).toFixed(3)}</div>
+              <div class="order-total-kwd">KWD</div>
+            </div>
+            ${o.status === "new" ? `<button class="action-btn" onclick="event.stopPropagation();updateStatus('${o.id}','preparing')" style="background:#3b82f615;color:#3b82f6;border-color:#3b82f630">ابدأ</button>` : ""}
+            ${o.status === "preparing" ? `<button class="action-btn" onclick="event.stopPropagation();updateStatus('${o.id}','done')" style="background:#22c55e15;color:#22c55e;border-color:#22c55e30">تم ✓</button>` : ""}
+          </div>`;
+      }).join("");
+
+      return `
+        <div class="slot-group">
+          <div class="slot-header">
+            <div class="slot-badge">📅 ${date} — ⏰ ${time}</div>
+            <div class="slot-count">${orders.length} طلبات</div>
+            <div class="slot-line"></div>
+            <a class="wa-btn" href="https://wa.me/?text=${buildWAMsg(date, time, orders)}" target="_blank">📤 إرسال للمندوب</a>
+          </div>
+          <div class="area-chips">${areaChips}</div>
+          <div class="orders-list">${orderRows}</div>
+        </div>`;
+    }).join("");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>متجري — لوحة الأدمن</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; font-family: 'Noto Kufi Arabic', sans-serif; color: white; min-height: 100vh; display: flex; }
+  .sidebar {
+    width: 220px; background: #050505; border-left: 1px solid #141414;
+    padding: 28px 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh;
+  }
+  .sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid #141414; }
+  .sidebar-logo-title { color: #fbbf24; font-weight: 900; font-size: 16px; }
+  .sidebar-logo-sub { color: #333; font-size: 11px; margin-top: 4px; }
+  .sidebar-revenue { margin: 16px; padding: 14px; background: #0f0f0f; border: 1px solid #141414; border-radius: 14px; }
+  .sidebar-revenue-val { color: #fbbf24; font-weight: 900; font-size: 20px; }
+  .sidebar-revenue-lbl { color: #333; font-size: 11px; margin-top: 4px; }
+  .nav-item {
+    padding: 13px 20px; display: flex; align-items: center; gap: 12px;
+    cursor: pointer; font-size: 13px; color: #333; transition: all 0.2s;
+    border-right: 2px solid transparent;
+  }
+  .nav-item.active { color: #fbbf24; background: rgba(251,191,36,0.06); border-right-color: #fbbf24; font-weight: 700; }
+  .main { flex: 1; padding: 28px; overflow: auto; }
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+  .stat-card { background: #0f0f0f; border: 1px solid #141414; border-radius: 16px; padding: 18px; }
+  .stat-icon { font-size: 24px; margin-bottom: 10px; }
+  .stat-val { font-size: 24px; font-weight: 900; }
+  .stat-lbl { font-size: 11px; color: #333; margin-top: 3px; }
+  .filters { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+  .search-input {
+    flex: 1; min-width: 200px; background: #0f0f0f; border: 1px solid #141414;
+    border-radius: 10px; padding: 10px 14px; color: white;
+    font-family: inherit; font-size: 13px; outline: none;
+  }
+  .filter-btn {
+    padding: 9px 14px; border-radius: 50px; border: 1px solid #141414;
+    background: transparent; color: #444; font-family: inherit;
+    font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s;
+  }
+  .filter-btn.active { border-color: #fbbf24; background: #fbbf2410; color: #fbbf24; }
+  .table-wrap { background: #0f0f0f; border: 1px solid #141414; border-radius: 20px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: #050505; }
+  th { padding: 14px 16px; text-align: right; font-size: 11px; font-weight: 700; color: #333; border-bottom: 1px solid #141414; }
+  tbody tr { border-bottom: 1px solid #141414; cursor: pointer; transition: background 0.15s; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  td { padding: 14px 16px; }
+  .badge { padding: 3px 10px; border-radius: 50px; font-size: 12px; font-weight: 700; }
+  .status-dot { padding: 3px 10px; border-radius: 50px; font-size: 12px; font-weight: 700; }
+  .action-btn {
+    border: 1px solid; border-radius: 8px; padding: 5px 12px;
+    font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .empty { text-align: center; padding: 40px; color: #333; font-size: 14px; }
+  .loading { text-align: center; padding: 40px; color: #fbbf24; font-size: 16px; font-weight: 700; }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #0f0f0f; border: 1px solid #1f1f1f; border-radius: 24px; padding: 28px; width: 100%; max-width: 380px; }
+  .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+  .modal-close { background: #141414; border: none; border-radius: 50%; width: 32px; height: 32px; color: #555; cursor: pointer; font-size: 16px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .modal-stat { background: #050505; border-radius: 12px; padding: 14px; }
+  .modal-stat-lbl { color: #333; font-size: 11px; margin-bottom: 4px; }
+  .modal-stat-val { color: white; font-weight: 800; font-size: 14px; }
+  .plan-btns { display: flex; gap: 8px; margin-bottom: 16px; }
+  .plan-btn { flex: 1; padding: 10px 6px; border-radius: 10px; border: 1px solid #141414; background: transparent; color: #333; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .modal-action { width: 100%; border: 1px solid; border-radius: 12px; padding: 13px; font-family: inherit; font-weight: 800; font-size: 14px; cursor: pointer; }
+
+  /* Admin login */
+  .admin-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0a0a0a; width: 100%; }
+  .login-card { background: #141414; border: 1px solid #1f1f1f; border-radius: 24px; padding: 32px; width: 100%; max-width: 380px; }
+  .login-title { color: white; font-weight: 900; font-size: 20px; margin-bottom: 6px; }
+  .login-sub { color: #444; font-size: 13px; margin-bottom: 24px; }
+  .login-field { margin-bottom: 16px; }
+  .login-field label { display: block; color: #555; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+  .login-field input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #1f1f1f; background: #0f0f0f; color: white; font-family: inherit; font-size: 13px; outline: none; }
+  .login-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(90deg,#f59e0b,#fbbf24); color: #0a0a0a; font-family: inherit; font-weight: 800; font-size: 15px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Admin Login -->
+<div class="admin-login" id="adminLogin">
+  <div class="login-card">
+    <div style="font-size:40px;margin-bottom:16px">⚙️</div>
+    <div class="login-title">لوحة الأدمن</div>
+    <div class="login-sub">للدخول كـ Super Admin فقط</div>
+    <div id="loginError" style="background:#ef444415;border:1px solid #ef444430;border-radius:10px;padding:10px 14px;color:#ef4444;font-size:13px;font-weight:600;margin-bottom:16px;display:none"></div>
+    <div class="login-field"><label>البريد الإلكتروني</label><input type="email" id="adminEmail" dir="ltr" placeholder="admin@matjari.com"/></div>
+    <div class="login-field"><label>كلمة المرور</label><input type="password" id="adminPassword" dir="ltr" placeholder="••••••••"/></div>
+    <button class="login-btn" onclick="adminLogin()">دخول ←</button>
+  </div>
+</div>
+
+<!-- Admin Dashboard -->
+<div id="adminDashboard" style="display:none;width:100%;display:none;flex-direction:row">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-title">🛍️ متجري</div>
+      <div class="sidebar-logo-sub">لوحة الأدمن</div>
+    </div>
+    <div class="nav-item active">🏪 المتاجر</div>
+    <div class="nav-item">💳 الاشتراكات</div>
+    <div class="nav-item">📊 التقارير</div>
+    <div class="sidebar-revenue">
+      <div class="sidebar-revenue-val" id="sideRevenue">0 KWD</div>
+      <div class="sidebar-revenue-lbl">إيراد الشهر</div>
+    </div>
+    <div style="padding:16px">
+      <button onclick="adminLogout()" style="width:100%;background:#141414;border:1px solid #1f1f1f;border-radius:10px;padding:10px;color:#555;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer">خروج</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="stats">
+      <div class="stat-card"><div class="stat-icon">🏪</div><div class="stat-val" id="stAll" style="color:#60a5fa">0</div><div class="stat-lbl">إجمالي المتاجر</div></div>
+      <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-val" id="stPro" style="color:#fbbf24">0</div><div class="stat-lbl">مشتركين Pro</div></div>
+      <div class="stat-card"><div class="stat-icon">🎁</div><div class="stat-val" id="stTrial" style="color:#3b82f6">0</div><div class="stat-lbl">في فترة التجربة</div></div>
+      <div class="stat-card"><div class="stat-icon">⛔</div><div class="stat-val" id="stExpired" style="color:#ef4444">0</div><div class="stat-lbl">منتهية التجربة</div></div>
+    </div>
+
+    <div class="filters">
+      <input class="search-input" id="searchInput" placeholder="🔍 ابحث عن متجر..." oninput="renderTable()"/>
+      <button class="filter-btn active" onclick="setFilter('all',this)">الكل</button>
+      <button class="filter-btn" onclick="setFilter('pro',this)">⭐ Pro</button>
+      <button class="filter-btn" onclick="setFilter('trial',this)">🎁 تجربة</button>
+      <button class="filter-btn" onclick="setFilter('expired',this)">⛔ منتهي</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>المتجر</th><th>الباقة</th><th>الطلبات</th><th>انضم</th><th>الحالة</th><th>إجراء</th></tr>
+        </thead>
+        <tbody id="storesTable"><tr><td colspan="6" class="loading">⏳ جاري التحميل...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="color:white;font-weight:900;font-size:17px" id="modalStoreName"></div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-grid" id="modalGrid"></div>
+    <div style="color:#444;font-size:12px;font-weight:700;margin-bottom:10px">تغيير الباقة</div>
+    <div class="plan-btns" id="planBtns"></div>
+    <button class="modal-action" id="modalToggleBtn"></button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA9aysxwa-S7GmRbBxjOTrjgOG4_c3fT4k",
+    authDomain: "matgary-2f25f.firebaseapp.com",
+    projectId: "matgary-2f25f",
+    storageBucket: "matgary-2f25f.firebasestorage.app",
+    messagingSenderId: "360734383265",
+    appId: "1:360734383265:web:e9dbf5f3048fecb76ea4e0",
+  };
+
+  const ADMIN_EMAIL = "Hr.edu.kw@gmail.com";
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let allStores = [];
+  let currentFilter = "all";
+  let selectedStore = null;
+
+  const PLANS = {
+    pro:     { label: "Pro",    color: "#fbbf24", bg: "#fbbf2415", icon: "⭐" },
+    trial:   { label: "تجربة", color: "#3b82f6", bg: "#3b82f615", icon: "🎁" },
+    expired: { label: "منتهي", color: "#ef4444", bg: "#ef444415", icon: "⛔" },
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    if (user && user.email === ADMIN_EMAIL) {
+      showDashboard();
+      loadStores();
+    } else if (user) {
+      signOut(auth);
+    }
+  });
+
+  window.adminLogin = async () => {
+    const email = document.getElementById("adminEmail").value;
+    const pass = document.getElementById("adminPassword").value;
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      if (auth.currentUser.email !== ADMIN_EMAIL) {
+        await signOut(auth);
+        showLoginError("ليس لديك صلاحية الدخول");
+      }
+    } catch(e) {
+      showLoginError("بيانات غير صحيحة");
+    }
+  };
+
+  window.adminLogout = () => signOut(auth).then(() => {
+    document.getElementById("adminDashboard").style.display = "none";
+    document.getElementById("adminLogin").style.display = "flex";
+  });
+
+  function showLoginError(msg) {
+    const el = document.getElementById("loginError");
+    el.textContent = "⚠️ " + msg; el.style.display = "block";
+  }
+
+  function showDashboard() {
+    document.getElementById("adminLogin").style.display = "none";
+    document.getElementById("adminDashboard").style.display = "flex";
+  }
+
+  function loadStores() {
+    const q = query(collection(db, "stores"), orderBy("createdAt", "desc"));
+    onSnapshot(q, (snap) => {
+      allStores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderStats();
+      renderTable();
+    });
+  }
+
+  function renderStats() {
+    document.getElementById("stAll").textContent = allStores.length;
+    document.getElementById("stPro").textContent = allStores.filter(s => s.plan === "pro").length;
+    document.getElementById("stTrial").textContent = allStores.filter(s => s.plan === "trial").length;
+    document.getElementById("stExpired").textContent = allStores.filter(s => s.plan === "expired").length;
+    const rev = allStores.filter(s => s.plan === "pro").length * 15;
+    document.getElementById("sideRevenue").textContent = `${rev} KWD`;
+  }
+
+  window.setFilter = (filter, btn) => {
+    currentFilter = filter;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderTable();
+  };
+
+  window.renderTable = () => {
+    const search = document.getElementById("searchInput").value;
+    const filtered = allStores.filter(s => {
+      const matchSearch = !search || s.storeName?.includes(search) || s.email?.includes(search);
+      const matchPlan = currentFilter === "all" || s.plan === currentFilter;
+      return matchSearch && matchPlan;
+    });
+
+    const tbody = document.getElementById("storesTable");
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty">لا توجد متاجر</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(s => {
+      const plan = PLANS[s.plan] || PLANS.trial;
+      const joined = s.createdAt?.toDate?.().toLocaleDateString("ar-KW") || "-";
+      const trialLeft = s.plan === "trial" && s.trialStart
+        ? Math.max(0, 14 - Math.floor((Date.now() - s.trialStart.toMillis()) / 86400000))
+        : null;
+
+      return `<tr onclick="openModal('${s.id}')">
+        <td>
+          <div style="color:white;font-weight:700;font-size:14px">${s.storeName}</div>
+          <div style="color:#333;font-size:12px;margin-top:2px">${s.email}</div>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="badge" style="background:${plan.bg};color:${plan.color}">${plan.icon} ${plan.label}</span>
+            ${trialLeft !== null ? `<span style="color:${trialLeft <= 3 ? '#ef4444' : '#555'};font-size:11px;font-weight:700">${trialLeft}y متبقي</span>` : ""}
+          </div>
+        </td>
+        <td style="color:#555;font-size:13px">${s.ordersCount || 0}</td>
+        <td style="color:#333;font-size:12px">${joined}</td>
+        <td><span class="status-dot" style="background:${s.status === 'active' ? '#22c55e15' : '#ef444415'};color:${s.status === 'active' ? '#22c55e' : '#ef4444'}">${s.status === 'active' ? 'نشط' : 'موقوف'}</span></td>
+        <td><button class="action-btn" onclick="event.stopPropagation();toggleStatus('${s.id}','${s.status}')" style="background:${s.status === 'active' ? '#ef444415' : '#22c55e15'};color:${s.status === 'active' ? '#ef4444' : '#22c55e'};border-color:${s.status === 'active' ? '#ef444430' : '#22c55e30'}">${s.status === 'active' ? 'إيقاف' : 'تفعيل'}</button></td>
+      </tr>`;
+    }).join("");
+  };
+
+  window.toggleStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === "active" ? "suspended" : "active";
+    await updateDoc(doc(db, "stores", id), { status: newStatus });
+  };
+
+  window.changePlan = async (id, plan) => {
+    await updateDoc(doc(db, "stores", id), { plan });
+    document.getElementById("modal").classList.remove("open");
+  };
+
+  window.openModal = (id) => {
+    const s = allStores.find(s => s.id === id);
+    if (!s) return;
+    selectedStore = s;
+    const plan = PLANS[s.plan] || PLANS.trial;
+    document.getElementById("modalStoreName").textContent = s.storeName;
+    document.getElementById("modalGrid").innerHTML = `
+      <div class="modal-stat"><div class="modal-stat-lbl">📧 البريد</div><div class="modal-stat-val" style="font-size:12px">${s.email}</div></div>
+      <div class="modal-stat"><div class="modal-stat-lbl">📱 واتساب</div><div class="modal-stat-val">${s.whatsapp || "-"}</div></div>
+      <div class="modal-stat"><div class="modal-stat-lbl">📦 الطلبات</div><div class="modal-stat-val">${s.ordersCount || 0}</div></div>
+      <div class="modal-stat"><div class="modal-stat-lbl">الباقة الحالية</div><div class="modal-stat-val" style="color:${plan.color}">${plan.icon} ${plan.label}</div></div>
+    `;
+    document.getElementById("planBtns").innerHTML = ["pro","trial","expired"].map(p => {
+      const pl = PLANS[p];
+      return `<button class="plan-btn" onclick="changePlan('${id}','${p}')" style="${s.plan === p ? `border-color:${pl.color};background:${pl.bg};color:${pl.color}` : ''}">${pl.icon} ${pl.label}</button>`;
+    }).join("");
+
+    const toggleBtn = document.getElementById("modalToggleBtn");
+    toggleBtn.textContent = s.status === "active" ? "🚫 إيقاف المتجر" : "✅ تفعيل المتجر";
+    toggleBtn.style.cssText = `background:${s.status === "active" ? "#ef444415" : "#22c55e15"};color:${s.status === "active" ? "#ef4444" : "#22c55e"};border-color:${s.status === "active" ? "#ef444430" : "#22c55e30"}`;
+    toggleBtn.onclick = () => { toggleStatus(id, s.status); document.getElementById("modal").classList.remove("open"); };
+
+    document.getElementById("modal").classList.add("open");
+  };
+
+  window.closeModal = (e) => { if (e.target.id === "modal") document.getElementById("modal").classList.remove("open"); };
+</script>
+</body>
+</html>

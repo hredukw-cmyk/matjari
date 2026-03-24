@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>متجري</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #fdf8f3; font-family: 'Noto Kufi Arabic', sans-serif; min-height: 100vh; }
+  .header {
+    padding: 32px 20px 24px; text-align: center; color: white;
+    position: relative; overflow: hidden;
+  }
+  .header-overlay { position: absolute; inset: 0; opacity: 0.15; background-size: cover; background-position: center; }
+  .header-content { position: relative; z-index: 1; }
+  .store-emoji { font-size: 48px; margin-bottom: 8px; }
+  .store-name { font-size: 24px; font-weight: 900; margin-bottom: 4px; }
+  .store-desc { font-size: 13px; opacity: 0.85; }
+  .cart-btn {
+    margin-top: 16px; background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3); border-radius: 50px;
+    padding: 10px 24px; color: white; font-family: inherit;
+    font-weight: 800; font-size: 14px; cursor: pointer; display: none;
+  }
+  .main { max-width: 500px; margin: 0 auto; padding: 20px 16px; }
+  .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .product-card {
+    background: white; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07); transition: transform 0.2s;
+  }
+  .product-card:hover { transform: translateY(-3px); }
+  .product-img { height: 90px; display: flex; align-items: center; justify-content: center; font-size: 42px; position: relative; }
+  .qty-badge {
+    position: absolute; top: 8px; left: 8px; width: 22px; height: 22px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 11px; color: white;
+  }
+  .product-body { padding: 12px; }
+  .product-name { font-weight: 800; font-size: 14px; margin-bottom: 3px; }
+  .product-desc { font-size: 11px; color: #9a7a65; margin-bottom: 10px; line-height: 1.5; }
+  .product-footer { display: flex; justify-content: space-between; align-items: center; }
+  .product-price { font-weight: 900; font-size: 14px; }
+  .btn-add {
+    border: none; border-radius: 50%; width: 30px; height: 30px;
+    font-size: 20px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center;
+  }
+  .qty-controls { display: flex; align-items: center; gap: 6px; }
+  .qty-btn {
+    border: none; border-radius: 50%; width: 26px; height: 26px;
+    font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Steps */
+  .step { display: none; }
+  .step.active { display: block; }
+  .back-btn {
+    background: none; border: none; font-family: inherit; font-weight: 700;
+    font-size: 13px; cursor: pointer; margin-bottom: 20px; display: flex; align-items: center; gap: 4px;
+  }
+  .section-card { background: white; border-radius: 18px; padding: 18px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+  .section-title { font-weight: 800; font-size: 14px; margin-bottom: 14px; }
+  .days-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0; }
+  .day-btn {
+    padding: 10px 16px; border-radius: 12px; border: 1.5px solid #e8d5c4;
+    background: transparent; font-family: inherit; font-weight: 700;
+    font-size: 12px; cursor: pointer; transition: all 0.2s; color: #5c3a28;
+  }
+  .day-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+  .slots-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .slot-btn {
+    padding: 12px 8px; border-radius: 14px; border: 1.5px solid #e8d5c4;
+    background: transparent; font-family: inherit; cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .slot-btn.active { border-color: var(--primary); background: var(--primary-light); }
+  .slot-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .slot-time { font-weight: 800; font-size: 15px; color: #2c1810; }
+  .slot-status { font-size: 10px; margin-top: 3px; font-weight: 600; }
+  .slot-btn.active .slot-time { color: var(--primary); }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: #5c3a28; margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 11px 14px; border-radius: 10px;
+    border: 1.5px solid #e8d5c4; font-size: 14px; font-family: inherit;
+    color: #2c1810; background: #fdf8f3; outline: none;
+  }
+  .field input:focus { border-color: var(--primary); }
+  .gps-btn {
+    width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #22c55e40;
+    background: #f0fdf4; color: #22c55e; font-family: inherit; font-weight: 700;
+    font-size: 13px; cursor: pointer; margin-bottom: 8px;
+  }
+  .location-badge {
+    background: #f0fdf4; border: 1px solid #22c55e30; border-radius: 12px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  }
+  .payment-options { display: flex; gap: 10px; }
+  .payment-btn {
+    flex: 1; padding: 14px 10px; border-radius: 14px; border: 1.5px solid #e8d5c4;
+    background: transparent; cursor: pointer; font-family: inherit; text-align: center; transition: all 0.2s;
+  }
+  .payment-btn.active { border-color: var(--primary); background: var(--primary-light); }
+  .payment-icon { font-size: 24px; margin-bottom: 6px; }
+  .payment-label { font-size: 12px; font-weight: 700; color: #5c3a28; }
+  .payment-btn.active .payment-label { color: var(--primary); }
+  .transfer-info {
+    background: #f0fdf4; border: 1px solid #22c55e30; border-radius: 12px;
+    padding: 14px; margin-top: 10px; display: none;
+  }
+  .submit-btn {
+    width: 100%; padding: 15px; border: none; border-radius: 14px;
+    color: white; font-family: inherit; font-weight: 800; font-size: 15px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .submit-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+
+  /* Summary */
+  .summary-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5ede6; font-size: 13px; }
+  .summary-total { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 2px solid #f0ddd0; }
+
+  /* Success */
+  .success-screen { text-align: center; padding: 40px 20px; }
+  .success-emoji { font-size: 64px; margin-bottom: 16px; }
+  .success-title { font-size: 24px; font-weight: 900; color: #2c1810; margin-bottom: 8px; }
+  .success-sub { color: #9a7a65; font-size: 14px; line-height: 1.8; margin-bottom: 24px; }
+  .loading { text-align: center; padding: 60px; font-size: 16px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div id="loadingScreen" class="loading">⏳ جاري تحميل المتجر...</div>
+<div id="notFound" style="display:none;text-align:center;padding:60px;color:#9a7a65;font-size:14px">المتجر غير موجود 😕</div>
+
+<div id="storeContent" style="display:none">
+  <!-- Header -->
+  <div class="header" id="storeHeader">
+    <div class="header-content">
+      <div class="store-emoji" id="storeEmoji">🍽️</div>
+      <div class="store-name" id="storeName">...</div>
+      <div class="store-desc" id="storeDesc">...</div>
+      <button class="cart-btn" id="cartBtn" onclick="goToSchedule()">🛒 <span id="cartSummary"></span></button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- Step 1: Browse -->
+    <div class="step active" id="step1">
+      <div class="products-grid" id="productsGrid"></div>
+    </div>
+
+    <!-- Step 2: Schedule -->
+    <div class="step" id="step2">
+      <button class="back-btn" onclick="goTo(1)" style="color:var(--primary)">← رجوع للمنتجات</button>
+
+      <div class="section-card">
+        <div class="section-title">📅 اختار يوم التسليم</div>
+        <div class="days-grid" id="daysGrid"></div>
+      </div>
+
+      <div class="section-card" id="slotsCard" style="display:none">
+        <div class="section-title">⏰ اختار الوقت</div>
+        <div class="slots-grid" id="slotsGrid"></div>
+      </div>
+
+      <button class="submit-btn" id="nextToCheckout" onclick="goTo(3)" disabled style="background:#d4b8a8">
+        التالي ← بيانات التوصيل
+      </button>
+    </div>
+
+    <!-- Step 3: Checkout -->
+    <div class="step" id="step3">
+      <button class="back-btn" onclick="goTo(2)" style="color:var(--primary)">← تغيير الموعد</button>
+
+      <!-- Delivery badge -->
+      <div class="section-card" style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:20px">📅</span>
+        <div style="flex:1">
+          <div style="font-weight:800;font-size:13px" id="selectedDateTime"></div>
+          <div style="color:#9a7a65;font-size:11px">موعد التسليم</div>
+        </div>
+        <button onclick="goTo(2)" style="background:none;border:none;color:#9a7a65;font-size:12px;cursor:pointer">تغيير</button>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="section-card">
+        <div class="section-title">🧾 ملخص الطلب</div>
+        <div id="orderSummary"></div>
+      </div>
+
+      <!-- Delivery Info -->
+      <div class="section-card">
+        <div class="section-title">📍 بيانات التوصيل</div>
+        <div class="field"><label>الاسم</label><input type="text" id="custName" placeholder="اسمك الكريم"/></div>
+        <div class="field"><label>رقم الهاتف</label><input type="tel" id="custPhone" placeholder="05XXXXXXXX" dir="ltr"/></div>
+        <div class="field">
+          <label>موقع التوصيل</label>
+          <button class="gps-btn" onclick="getLocation()">📡 تحديد موقعي تلقائياً</button>
+          <div id="locationBadge" class="location-badge" style="display:none">
+            <span style="font-size:20px">📍</span>
+            <div style="flex:1"><div style="font-weight:800;font-size:14px" id="locationArea"></div><div style="color:#9a7a65;font-size:11px" id="locationCoords"></div></div>
+            <button onclick="clearLocation()" style="background:none;border:none;color:#9a7a65;cursor:pointer;font-size:16px">✕</button>
+          </div>
+          <input type="text" id="custAddress" placeholder="أو اكتب العنوان يدوياً..."/>
+        </div>
+        <div class="field"><label>ملاحظات (اختياري)</label><input type="text" id="custNotes" placeholder="أي تعليمات خاصة..."/></div>
+      </div>
+
+      <!-- Payment -->
+      <div class="section-card">
+        <div class="section-title">💳 طريقة الدفع</div>
+        <div class="payment-options">
+          <button class="payment-btn" onclick="selectPayment('cash')" id="payCash">
+            <div class="payment-icon">💵</div>
+            <div class="payment-label">كاش عند التسليم</div>
+          </button>
+          <button class="payment-btn" onclick="selectPayment('transfer')" id="payTransfer">
+            <div class="payment-icon">🏦</div>
+            <div class="payment-label">تحويل بنكي</div>
+          </button>
+        </div>
+        <div class="transfer-info" id="transferInfo">
+          <div style="color:#22c55e;font-weight:800;font-size:13px;margin-bottom:8px">📋 بيانات التحويل</div>
+          <div style="color:#555;font-size:13px;line-height:2">
+            البنك: <strong style="color:#2c1810" id="bankName">-</strong><br/>
+            الاسم: <strong style="color:#2c1810" id="bankAccount">-</strong><br/>
+            IBAN: <strong style="color:#2c1810;direction:ltr;display:inline-block" id="bankIban">-</strong>
+          </div>
+          <div style="color:#f59e0b;font-size:12px;font-weight:600;margin-top:8px">⚠️ أرسل إيصال التحويل على الواتساب بعد الطلب</div>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="submitOrder" onclick="placeOrder()" disabled style="background:#d4b8a8">
+        ✅ تأكيد الطلب
+      </button>
+    </div>
+
+    <!-- Step 4: Success -->
+    <div class="step" id="step4">
+      <div class="success-screen">
+        <div class="success-emoji">🎉</div>
+        <div class="success-title">تم استلام طلبك!</div>
+        <div class="success-sub" id="successMsg"></div>
+        <a id="waLink" href="#" target="_blank" style="display:inline-block;background:#25D366;color:white;text-decoration:none;border-radius:14px;padding:14px 28px;font-weight:700;font-size:15px">💬 تواصل عبر واتساب</a>
+        <br/><br/>
+        <button onclick="goTo(1);resetOrder()" style="background:none;border:none;color:var(--primary);font-family:inherit;font-weight:700;font-size:14px;cursor:pointer">طلب جديد</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+  import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA9aysxwa-S7GmRbBxjOTrjgOG4_c3fT4k",
+    authDomain: "matgary-2f25f.firebaseapp.com",
+    projectId: "matgary-2f25f",
+    storageBucket: "matgary-2f25f.firebasestorage.app",
+    messagingSenderId: "360734383265",
+    appId: "1:360734383265:web:e9dbf5f3048fecb76ea4e0",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let storeData = null;
+  let products = [];
+  let cart = {};
+  let selectedDate = "";
+  let selectedSlot = "";
+  let selectedPayment = "";
+  let userLat = null, userLng = null, userArea = "";
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const storeSlug = urlParams.get("store");
+
+  const orderTotal = () =>
+    Object.entries(cart).reduce((s, [id, qty]) => {
+      const p = products.find(p => p.id === id);
+      return s + (p ? p.price * qty : 0);
+    }, 0);
+
+  // Load store
+  async function loadStore() {
+    if (!storeSlug) { showNotFound(); return; }
+    try {
+      const q = query(collection(db, "stores"), where("slug", "==", storeSlug));
+      const snap = await getDocs(q);
+      if (snap.empty) { showNotFound(); return; }
+      storeData = { id: snap.docs[0].id, ...snap.docs[0].data() };
+      renderStore();
+    } catch (e) { showNotFound(); }
+  }
+
+  function showNotFound() {
+    document.getElementById("loadingScreen").style.display = "none";
+    document.getElementById("notFound").style.display = "block";
+  }
+
+  async function renderStore() {
+    const theme = getTheme(storeData.category || "restaurant");
+    document.documentElement.style.setProperty("--primary", theme.primary);
+    document.documentElement.style.setProperty("--primary-light", theme.light);
+    document.getElementById("storeHeader").style.background = theme.headerBg;
+    document.getElementById("storeEmoji").textContent = theme.emoji;
+    document.getElementById("storeName").textContent = storeData.storeName;
+    document.getElementById("storeDesc").textContent = storeData.description || "";
+    document.title = storeData.storeName + " — متجري";
+
+    // Bank info
+    if (storeData.bankName) document.getElementById("bankName").textContent = storeData.bankName;
+    if (storeData.bankAccount) document.getElementById("bankAccount").textContent = storeData.bankAccount;
+    if (storeData.bankIban) document.getElementById("bankIban").textContent = storeData.bankIban;
+
+    // Load products
+    const pSnap = await getDocs(collection(db, "stores", storeData.id, "products"));
+    products = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderProducts(theme);
+    renderDays();
+
+    document.getElementById("loadingScreen").style.display = "none";
+    document.getElementById("storeContent").style.display = "block";
+  }
+
+  function renderProducts(theme) {
+    const grid = document.getElementById("productsGrid");
+    grid.innerHTML = products.map(p => `
+      <div class="product-card">
+        <div class="product-img" style="background:linear-gradient(135deg,${theme.primary}22,${theme.light})">
+          <span>${p.emoji || "🍽️"}</span>
+          <div class="qty-badge" id="badge-${p.id}" style="background:${theme.primary};display:none"></div>
+        </div>
+        <div class="product-body">
+          <div class="product-name" style="color:#2c1810">${p.name}</div>
+          <div class="product-desc">${p.desc || ""}</div>
+          <div class="product-footer">
+            <span class="product-price" style="color:${theme.primary}">${p.price.toFixed(3)} KWD</span>
+            <div id="ctrl-${p.id}">
+              <button class="btn-add" onclick="addItem('${p.id}')" style="background:${theme.primary}">+</button>
+            </div>
+          </div>
+        </div>
+      </div>`).join("");
+  }
+
+  function renderDays() {
+    const slots = storeData.slots || ["07:00","08:00","09:00","12:00","13:00"];
+    const days = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(); d.setDate(d.getDate() + i);
+      const val = d.toISOString().split("T")[0];
+      const lbl = i === 0 ? "اليوم" : i === 1 ? "غداً" : d.toLocaleDateString("ar-KW", { weekday: "short", day: "numeric", month: "short" });
+      days.push({ val, lbl });
+    }
+    document.getElementById("daysGrid").innerHTML = days.map(d =>
+      `<button class="day-btn" onclick="selectDay('${d.val}','${d.lbl}')">${d.lbl}</button>`
+    ).join("");
+  }
+
+  window.selectDay = (val, lbl) => {
+    selectedDate = val;
+    selectedSlot = "";
+    document.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
+    event.target.classList.add("active");
+    document.getElementById("slotsCard").style.display = "block";
+    renderSlots(val);
+    checkScheduleValid();
+  };
+
+  function renderSlots(date) {
+    const slots = storeData.slots || ["07:00","08:00","09:00","12:00","13:00"];
+    const maxPerSlot = storeData.maxPerSlot || 5;
+    document.getElementById("slotsGrid").innerHTML = slots.map(slot => {
+      const key = `${date}_${slot}`;
+      const booked = storeData.booked?.[key] || 0;
+      const available = booked < maxPerSlot;
+      const remaining = maxPerSlot - booked;
+      return `
+        <button class="slot-btn" ${!available ? "disabled" : ""} onclick="selectSlot('${slot}')">
+          <div class="slot-time">${slot}</div>
+          <div class="slot-status" style="color:${!available ? '#333' : remaining <= 2 ? '#f87171' : '#9a7a65'}">
+            ${!available ? "ممتلئ" : remaining <= 2 ? `${remaining} متبقي` : "متاح"}
+          </div>
+        </button>`;
+    }).join("");
+  }
+
+  window.selectSlot = (slot) => {
+    selectedSlot = slot;
+    document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("active"));
+    event.target.classList.add("active");
+    checkScheduleValid();
+  };
+
+  function checkScheduleValid() {
+    const btn = document.getElementById("nextToCheckout");
+    const valid = selectedDate && selectedSlot;
+    btn.disabled = !valid;
+    btn.style.background = valid ? `linear-gradient(135deg, var(--primary), #8b4513)` : "#d4b8a8";
+  }
+
+  window.addItem = (id) => {
+    cart[id] = (cart[id] || 0) + 1;
+    updateCart(id);
+  };
+
+  window.removeItem = (id) => {
+    if (cart[id] > 1) cart[id]--;
+    else delete cart[id];
+    updateCart(id);
+  };
+
+  function updateCart(id) {
+    const qty = cart[id] || 0;
+    const badge = document.getElementById(`badge-${id}`);
+    const ctrl = document.getElementById(`ctrl-${id}`);
+    const theme = getTheme(storeData?.category || "restaurant");
+
+    if (qty === 0) {
+      badge.style.display = "none";
+      ctrl.innerHTML = `<button class="btn-add" onclick="addItem('${id}')" style="background:${theme.primary}">+</button>`;
+    } else {
+      badge.textContent = qty; badge.style.display = "flex";
+      ctrl.innerHTML = `
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="removeItem('${id}')" style="background:#e0c9b8;color:#2c1810">−</button>
+          <span style="font-weight:800;color:#2c1810;font-size:14px">${qty}</span>
+          <button class="qty-btn" onclick="addItem('${id}')" style="background:${theme.primary};color:white">+</button>
+        </div>`;
+    }
+
+    const total = orderTotal();
+    const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
+    const cartBtn = document.getElementById("cartBtn");
+    if (totalItems > 0) {
+      cartBtn.style.display = "inline-block";
+      document.getElementById("cartSummary").textContent = `${totalItems} منتج — ${total.toFixed(3)} KWD`;
+    } else {
+      cartBtn.style.display = "none";
+    }
+  }
+
+  window.goToSchedule = () => goTo(2);
+
+  window.goTo = (step) => {
+    document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+    document.getElementById(`step${step}`).classList.add("active");
+    if (step === 3) renderCheckout();
+    window.scrollTo(0, 0);
+  };
+
+  function renderCheckout() {
+    const theme = getTheme(storeData?.category || "restaurant");
+    document.getElementById("selectedDateTime").textContent = `${selectedDate} — الساعة ${selectedSlot}`;
+    document.getElementById("selectedDateTime").style.color = theme.primary;
+
+    const cartItems = Object.entries(cart).map(([id, qty]) => {
+      const p = products.find(p => p.id === id);
+      return p ? `<div class="summary-item"><span style="color:#5c3a28">${p.name} × ${qty}</span><span style="color:${theme.primary};font-weight:700">${(p.price * qty).toFixed(3)} KWD</span></div>` : "";
+    }).join("");
+
+    document.getElementById("orderSummary").innerHTML = cartItems + `
+      <div class="summary-total">
+        <span style="font-weight:900;font-size:16px;color:#2c1810">الإجمالي</span>
+        <span style="font-weight:900;font-size:18px;color:${theme.primary}">${orderTotal().toFixed(3)} KWD</span>
+      </div>`;
+
+    ["custName","custPhone"].forEach(id => {
+      document.getElementById(id).addEventListener("input", checkOrderValid);
+    });
+  }
+
+  window.getLocation = async () => {
+    const btn = event.target;
+    btn.textContent = "⏳ جاري التحديد..."; btn.disabled = true;
+    try {
+      const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 10000 }));
+      userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json&accept-language=ar`);
+      const data = await res.json();
+      userArea = data.address?.suburb || data.address?.city_district || data.address?.city || "موقعك الحالي";
+      document.getElementById("locationArea").textContent = userArea;
+      document.getElementById("locationCoords").textContent = `${userLat.toFixed(5)}, ${userLng.toFixed(5)}`;
+      document.getElementById("locationBadge").style.display = "flex";
+      document.getElementById("custAddress").value = "";
+      document.getElementById("custAddress").disabled = true;
+      btn.style.display = "none";
+      checkOrderValid();
+    } catch(e) {
+      alert("تعذّر تحديد الموقع — اكتب العنوان يدوياً");
+      btn.textContent = "📡 تحديد موقعي تلقائياً"; btn.disabled = false;
+    }
+  };
+
+  window.clearLocation = () => {
+    userLat = null; userLng = null; userArea = "";
+    document.getElementById("locationBadge").style.display = "none";
+    document.getElementById("custAddress").disabled = false;
+    document.querySelector(".gps-btn").style.display = "block";
+    checkOrderValid();
+  };
+
+  window.selectPayment = (method) => {
+    selectedPayment = method;
+    document.getElementById("payCash").classList.toggle("active", method === "cash");
+    document.getElementById("payTransfer").classList.toggle("active", method === "transfer");
+    document.getElementById("transferInfo").style.display = method === "transfer" ? "block" : "none";
+    checkOrderValid();
+  };
+
+  function checkOrderValid() {
+    const name = document.getElementById("custName").value.trim();
+    const phone = document.getElementById("custPhone").value.trim();
+    const address = userArea || document.getElementById("custAddress").value.trim();
+    const valid = name && phone && address && selectedPayment && Object.keys(cart).length > 0;
+    const btn = document.getElementById("submitOrder");
+    const theme = getTheme(storeData?.category || "restaurant");
+    btn.disabled = !valid;
+    btn.style.background = valid ? `linear-gradient(135deg, ${theme.primary}, #8b4513)` : "#d4b8a8";
+  }
+
+  window.placeOrder = async () => {
+    const btn = document.getElementById("submitOrder");
+    btn.disabled = true; btn.textContent = "⏳ جاري الإرسال...";
+
+    try {
+      const cartItems = Object.entries(cart).map(([id, qty]) => {
+        const p = products.find(p => p.id === id);
+        return { name: p.name, qty, price: p.price };
+      });
+
+      await addDoc(collection(db, "orders"), {
+        storeId: storeData.id,
+        customerName: document.getElementById("custName").value.trim(),
+        customerPhone: document.getElementById("custPhone").value.trim(),
+        address: userArea || document.getElementById("custAddress").value.trim(),
+        area: userArea || document.getElementById("custAddress").value.trim().split("،")[0],
+        lat: userLat, lng: userLng,
+        notes: document.getElementById("custNotes").value.trim(),
+        items: cartItems,
+        total: orderTotal(),
+        payment: selectedPayment,
+        deliveryDate: selectedDate,
+        deliveryTime: selectedSlot,
+        status: "new",
+        createdAt: serverTimestamp(),
+      });
+
+      // Success screen
+      document.getElementById("successMsg").innerHTML =
+        `شكراً ${document.getElementById("custName").value}!<br/>طلبك سيصل الساعة <strong>${selectedSlot}</strong> بتاريخ <strong>${selectedDate}</strong>`;
+      document.getElementById("waLink").href = `https://wa.me/965${storeData.whatsapp}?text=مرحبا، أرسلت طلباً من متجرك`;
+      goTo(4);
+    } catch(e) {
+      alert("حدث خطأ، حاول مرة أخرى");
+      btn.disabled = false;
+      btn.textContent = "✅ تأكيد الطلب";
+    }
+  };
+
+  window.resetOrder = () => {
+    cart = {}; selectedDate = ""; selectedSlot = ""; selectedPayment = "";
+    userLat = null; userLng = null; userArea = "";
+    products.forEach(p => {
+      const badge = document.getElementById(`badge-${p.id}`);
+      if (badge) badge.style.display = "none";
+    });
+    document.getElementById("cartBtn").style.display = "none";
+  };
+
+  function getTheme(category) {
+    const themes = {
+      restaurant: { primary: "#8b4513", light: "#8b451320", headerBg: "linear-gradient(135deg,#2c1810,#8b4513)", emoji: "🍽️" },
+      fashion:    { primary: "#1a1a2e", light: "#1a1a2e20", headerBg: "linear-gradient(135deg,#0f0f1a,#2d2d4e)", emoji: "👗" },
+      sweets:     { primary: "#c0507a", light: "#c0507a20", headerBg: "linear-gradient(135deg,#8b2252,#e8829a)", emoji: "🧁" },
+      beauty:     { primary: "#6b4f8e", light: "#6b4f8e20", headerBg: "linear-gradient(135deg,#2d1a4a,#9b7fc0)", emoji: "💄" },
+      organic:    { primary: "#2d6a4f", light: "#2d6a4f20", headerBg: "linear-gradient(135deg,#1b4332,#52b788)", emoji: "🌿" },
+      general:    { primary: "#1e5f8e", light: "#1e5f8e20", headerBg: "linear-gradient(135deg,#0f2d4a,#3a8fc0)", emoji: "📦" },
+    };
+    return themes[category] || themes.restaurant;
+  }
+
+  loadStore();
+</script>
+</body>
+</html>
