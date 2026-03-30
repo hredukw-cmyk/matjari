@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>متجري — إعداد متجرك</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #fdf8f3; font-family: 'Noto Kufi Arabic', sans-serif; min-height: 100vh; padding-bottom: 40px; }
+
+  .header {
+    background: linear-gradient(135deg, #2c1810, #8b4513);
+    color: white; padding: 20px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .header-title { font-weight: 900; font-size: 18px; }
+  .header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+
+  /* Progress */
+  .progress-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; padding: 20px; background: white;
+    border-bottom: 1px solid #f0e6dc; overflow-x: auto;
+  }
+  .step-item { display: flex; align-items: center; gap: 0; }
+  .step-circle {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px; flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .step-circle.done { background: #22c55e; color: white; }
+  .step-circle.active { background: #c0622a; color: white; }
+  .step-circle.pending { background: #f0e6dc; color: #c0a090; }
+  .step-label { font-size: 11px; font-weight: 700; margin-top: 4px; white-space: nowrap; }
+  .step-label.active { color: #c0622a; }
+  .step-label.done { color: #22c55e; }
+  .step-label.pending { color: #c0a090; }
+  .step-line { width: 40px; height: 2px; background: #f0e6dc; flex-shrink: 0; }
+  .step-line.done { background: #22c55e; }
+  .step-wrapper { display: flex; flex-direction: column; align-items: center; }
+
+  .main { max-width: 560px; margin: 0 auto; padding: 24px 16px; }
+
+  .section-card {
+    background: white; border-radius: 18px; padding: 22px;
+    margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  }
+  .section-title { font-weight: 800; font-size: 15px; color: #2c1810; margin-bottom: 16px; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: #5c3a28; margin-bottom: 6px; }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 11px 14px; border-radius: 10px;
+    border: 1.5px solid #e8d5c4; font-size: 14px;
+    font-family: inherit; color: #2c1810; background: #fdf8f3;
+    outline: none; transition: border-color 0.2s; resize: vertical;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: #c0622a; }
+
+  /* Category selector */
+  .categories { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .cat-btn {
+    padding: 14px 8px; border-radius: 14px; border: 1.5px solid #e8d5c4;
+    background: transparent; cursor: pointer; font-family: inherit;
+    text-align: center; transition: all 0.2s;
+  }
+  .cat-btn.active { border-color: #c0622a; background: #c0622a10; }
+  .cat-icon { font-size: 28px; margin-bottom: 4px; }
+  .cat-label { font-size: 12px; font-weight: 700; color: #5c3a28; }
+  .cat-btn.active .cat-label { color: #c0622a; }
+
+  /* Slots */
+  .slots-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .slot-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: #c0622a15; border: 1px solid #c0622a30;
+    border-radius: 50px; padding: 6px 12px;
+  }
+  .slot-chip span { color: #c0622a; font-weight: 700; font-size: 13px; }
+  .slot-chip button { background: none; border: none; color: #c0a090; cursor: pointer; font-size: 14px; padding: 0; }
+  .add-slot-row { display: flex; gap: 8px; }
+  .add-slot-row input { flex: 1; }
+  .btn-add-slot {
+    background: #c0622a; color: white; border: none; border-radius: 10px;
+    padding: 10px 18px; font-family: inherit; font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
+
+  /* Products */
+  .products-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .product-item {
+    background: #fdf8f3; border: 1px solid #e8d5c4; border-radius: 12px;
+    padding: 14px; display: flex; align-items: center; gap: 12px;
+  }
+  .product-emoji-input {
+    width: 50px; height: 50px; border-radius: 12px; border: 1.5px solid #e8d5c4;
+    background: white; font-size: 24px; text-align: center; cursor: pointer;
+    font-family: inherit; flex-shrink: 0;
+  }
+  .product-fields { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .product-fields input {
+    width: 100%; padding: 8px 12px; border-radius: 8px;
+    border: 1px solid #e8d5c4; font-size: 13px;
+    font-family: inherit; color: #2c1810; background: white; outline: none;
+  }
+  .product-fields input:focus { border-color: #c0622a; }
+  .product-row { display: flex; gap: 6px; }
+  .product-delete { background: #ef444415; border: 1px solid #ef444430; border-radius: 8px; padding: 6px 10px; color: #ef4444; cursor: pointer; font-size: 14px; flex-shrink: 0; }
+  .btn-add-product {
+    width: 100%; padding: 12px; border: 2px dashed #e8d5c4; border-radius: 12px;
+    background: transparent; color: #c0a090; font-family: inherit;
+    font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-add-product:hover { border-color: #c0622a; color: #c0622a; background: #c0622a08; }
+
+  /* Navigation buttons */
+  .nav-btns { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-next {
+    flex: 1; padding: 15px; border: none; border-radius: 14px;
+    background: linear-gradient(135deg, #c0622a, #8b4513);
+    color: white; font-family: inherit; font-weight: 800;
+    font-size: 15px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-next:hover { filter: brightness(1.08); }
+  .btn-next:disabled { background: #d4b8a8; cursor: not-allowed; }
+  .btn-back {
+    padding: 15px 20px; border: 1.5px solid #e8d5c4; border-radius: 14px;
+    background: white; color: #5c3a28; font-family: inherit;
+    font-weight: 700; font-size: 15px; cursor: pointer;
+  }
+
+  .loading { text-align: center; padding: 60px; font-size: 16px; font-weight: 700; color: #c0622a; }
+  .success-screen { text-align: center; padding: 40px 20px; }
+  .success-emoji { font-size: 64px; margin-bottom: 16px; }
+  .success-title { font-size: 24px; font-weight: 900; color: #2c1810; margin-bottom: 8px; }
+  .success-sub { color: #9a7a65; font-size: 14px; line-height: 1.8; margin-bottom: 24px; }
+  .link-box {
+    background: #f0fdf4; border: 1px solid #22c55e30; border-radius: 14px;
+    padding: 16px; margin-bottom: 20px; word-break: break-all;
+  }
+  .link-box-label { color: #22c55e; font-weight: 800; font-size: 13px; margin-bottom: 6px; }
+  .link-box-url { color: #2c1810; font-weight: 700; font-size: 14px; direction: ltr; }
+  .btn-copy {
+    background: #22c55e; color: white; border: none; border-radius: 10px;
+    padding: 10px 20px; font-family: inherit; font-weight: 700;
+    font-size: 13px; cursor: pointer; margin-top: 10px;
+  }
+  .btn-dashboard {
+    display: block; background: linear-gradient(135deg, #c0622a, #8b4513);
+    color: white; text-decoration: none; border-radius: 14px;
+    padding: 15px; font-weight: 800; font-size: 15px; text-align: center; margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">🛍️ إعداد متجرك</div>
+    <div class="header-sub">خطوات بسيطة وتبدأ تبيع</div>
+  </div>
+  <div style="color:rgba(255,255,255,0.7);font-size:13px" id="stepIndicator">خطوة 1 من 4</div>
+</div>
+
+<!-- Progress -->
+<div class="progress-bar">
+  <div class="step-wrapper">
+    <div class="step-circle active" id="sc1">1</div>
+    <div class="step-label active" id="sl1">المتجر</div>
+  </div>
+  <div class="step-line" id="line1"></div>
+  <div class="step-wrapper">
+    <div class="step-circle pending" id="sc2">2</div>
+    <div class="step-label pending" id="sl2">المنتجات</div>
+  </div>
+  <div class="step-line" id="line2"></div>
+  <div class="step-wrapper">
+    <div class="step-circle pending" id="sc3">3</div>
+    <div class="step-label pending" id="sl3">التوصيل</div>
+  </div>
+  <div class="step-line" id="line3"></div>
+  <div class="step-wrapper">
+    <div class="step-circle pending" id="sc4">4</div>
+    <div class="step-label pending" id="sl4">الدفع</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Step 1: Store Info -->
+  <div id="step1">
+    <div class="section-card">
+      <div class="section-title">🏪 معلومات المتجر</div>
+      <div class="field"><label>اسم المتجر</label><input type="text" id="storeName" placeholder="مثال: مطبخ أم نورة"/></div>
+      <div class="field"><label>وصف المتجر</label><textarea id="storeDesc" rows="2" placeholder="اكتب وصفاً قصيراً عن متجرك..."></textarea></div>
+      <div class="field"><label>📱 رقم الواتساب</label><input type="tel" id="whatsapp" placeholder="96512345678" dir="ltr"/></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">🎨 فئة المتجر</div>
+      <div class="categories">
+        <button class="cat-btn" onclick="selectCat('restaurant',this)"><div class="cat-icon">🍽️</div><div class="cat-label">مطعم / مطبخ</div></button>
+        <button class="cat-btn" onclick="selectCat('fashion',this)"><div class="cat-icon">👗</div><div class="cat-label">ملابس / عبايات</div></button>
+        <button class="cat-btn" onclick="selectCat('sweets',this)"><div class="cat-icon">🧁</div><div class="cat-label">حلويات / كيك</div></button>
+        <button class="cat-btn" onclick="selectCat('beauty',this)"><div class="cat-icon">💄</div><div class="cat-label">عطور / مكياج</div></button>
+        <button class="cat-btn" onclick="selectCat('organic',this)"><div class="cat-icon">🌿</div><div class="cat-label">عضوي / صحي</div></button>
+        <button class="cat-btn" onclick="selectCat('general',this)"><div class="cat-icon">📦</div><div class="cat-label">منتجات متنوعة</div></button>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn-next" onclick="goToStep(2)">التالي ← المنتجات</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Products -->
+  <div id="step2" style="display:none">
+    <div class="section-card">
+      <div class="section-title">🛍️ أضف منتجاتك</div>
+      <div class="products-list" id="productsList"></div>
+      <button class="btn-add-product" onclick="addProduct()">+ إضافة منتج جديد</button>
+    </div>
+    <div class="nav-btns">
+      <button class="btn-back" onclick="goToStep(1)">← رجوع</button>
+      <button class="btn-next" onclick="goToStep(3)">التالي ← التوصيل</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Delivery Slots -->
+  <div id="step3" style="display:none">
+    <div class="section-card">
+      <div class="section-title">⏰ أوقات التوصيل المتاحة</div>
+      <div class="slots-list" id="slotsList"></div>
+      <div class="add-slot-row">
+        <input type="time" id="newSlot"/>
+        <button class="btn-add-slot" onclick="addSlot()">+ إضافة وقت</button>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">⚙️ إعدادات التوصيل</div>
+      <div class="field">
+        <label>الحد الأقصى للطلبات لكل وقت</label>
+        <input type="number" id="maxPerSlot" value="5" min="1" max="50"/>
+      </div>
+      <div class="field">
+        <label>الحجز المسبق الأدنى (بالساعات)</label>
+        <input type="number" id="minHours" value="3" min="1" max="24"/>
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn-back" onclick="goToStep(2)">← رجوع</button>
+      <button class="btn-next" onclick="goToStep(4)">التالي ← الدفع</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Payment -->
+  <div id="step4" style="display:none">
+    <div class="section-card">
+      <div class="section-title">💳 بيانات التحويل البنكي</div>
+      <p style="color:#9a7a65;font-size:13px;margin-bottom:14px">اختياري — لو مش عاوز تفعّل التحويل اتركها فاضية</p>
+      <div class="field"><label>اسم البنك</label><input type="text" id="bankName" placeholder="بنك الكويت الوطني"/></div>
+      <div class="field"><label>اسم صاحب الحساب</label><input type="text" id="bankAccount" placeholder="اسمك الكريم"/></div>
+      <div class="field"><label>رقم IBAN</label><input type="text" id="bankIban" placeholder="KW91NBOK..." dir="ltr"/></div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn-back" onclick="goToStep(3)">← رجوع</button>
+      <button class="btn-next" id="saveBtn" onclick="saveStore()">✅ حفظ وإطلاق متجري</button>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div id="stepSuccess" style="display:none">
+    <div class="success-screen">
+      <div class="success-emoji">🎉</div>
+      <div class="success-title">متجرك جاهز!</div>
+      <div class="success-sub">شارك اللينك ده مع زبائنك وابدأ تستقبل طلبات</div>
+      <div class="link-box">
+        <div class="link-box-label">🔗 رابط متجرك</div>
+        <div class="link-box-url" id="storeUrl"></div>
+        <button class="btn-copy" onclick="copyLink()">📋 نسخ الرابط</button>
+      </div>
+      <a href="dashboard.html" class="btn-dashboard">🚀 ادخل على الداشبورد</a>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  import { getFirestore, doc, updateDoc, collection, addDoc }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA9aysxwa-S7GmRbBxjOTrjgOG4_c3fT4k",
+    authDomain: "matgary-2f25f.firebaseapp.com",
+    projectId: "matgary-2f25f",
+    storageBucket: "matgary-2f25f.firebasestorage.app",
+    messagingSenderId: "360734383265",
+    appId: "1:360734383265:web:e9dbf5f3048fecb76ea4e0",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let userId = null;
+  let selectedCategory = "";
+  let slots = ["07:00", "08:00", "12:00"];
+  let products = [];
+  let storeSlug = "";
+
+  // Auth check
+  onAuthStateChanged(auth, (user) => {
+    if (!user) { window.location.href = "index.html"; return; }
+    userId = user.uid;
+    // Pre-fill store name if exists
+    const savedName = localStorage.getItem("setupStoreName");
+    if (savedName) document.getElementById("storeName").value = savedName;
+    renderSlots();
+    addProduct(); // Add first product automatically
+  });
+
+  // Steps
+  window.goToStep = (step) => {
+    if (step === 2 && !validateStep1()) return;
+    [1,2,3,4].forEach(s => {
+      document.getElementById(`step${s}`).style.display = s === step ? "block" : "none";
+    });
+    document.getElementById("stepSuccess").style.display = "none";
+    updateProgress(step);
+    document.getElementById("stepIndicator").textContent = `خطوة ${step} من 4`;
+    window.scrollTo(0, 0);
+  };
+
+  function validateStep1() {
+    if (!document.getElementById("storeName").value.trim()) {
+      alert("الرجاء إدخال اسم المتجر"); return false;
+    }
+    if (!selectedCategory) {
+      alert("الرجاء اختيار فئة المتجر"); return false;
+    }
+    return true;
+  }
+
+  function updateProgress(step) {
+    [1,2,3,4].forEach(s => {
+      const circle = document.getElementById(`sc${s}`);
+      const label = document.getElementById(`sl${s}`);
+      if (s < step) {
+        circle.className = "step-circle done"; circle.textContent = "✓";
+        label.className = "step-label done";
+      } else if (s === step) {
+        circle.className = "step-circle active"; circle.textContent = s;
+        label.className = "step-label active";
+      } else {
+        circle.className = "step-circle pending"; circle.textContent = s;
+        label.className = "step-label pending";
+      }
+      if (s < 4) {
+        document.getElementById(`line${s}`).className = `step-line${s < step ? " done" : ""}`;
+      }
+    });
+  }
+
+  // Category
+  window.selectCat = (cat, btn) => {
+    selectedCategory = cat;
+    document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  };
+
+  // Products
+  window.addProduct = () => {
+    const id = Date.now();
+    products.push({ id, name: "", price: "", desc: "", emoji: "🍽️" });
+    renderProducts();
+  };
+
+  window.removeProduct = (id) => {
+    products = products.filter(p => p.id !== id);
+    renderProducts();
+  };
+
+  window.updateProduct = (id, field, value) => {
+    const p = products.find(p => p.id === id);
+    if (p) p[field] = value;
+  };
+
+  function renderProducts() {
+    document.getElementById("productsList").innerHTML = products.map(p => `
+      <div class="product-item">
+        <input class="product-emoji-input" value="${p.emoji}" 
+          onchange="updateProduct(${p.id},'emoji',this.value)"
+          title="اكتب الإيموجي"/>
+        <div class="product-fields">
+          <input placeholder="اسم المنتج" value="${p.name}" onchange="updateProduct(${p.id},'name',this.value)"/>
+          <input placeholder="الوصف (اختياري)" value="${p.desc}" onchange="updateProduct(${p.id},'desc',this.value)"/>
+          <div class="product-row">
+            <input placeholder="السعر KWD" type="number" step="0.001" value="${p.price}" onchange="updateProduct(${p.id},'price',this.value)" style="flex:1"/>
+          </div>
+        </div>
+        <button class="product-delete" onclick="removeProduct(${p.id})">🗑️</button>
+      </div>`).join("");
+  }
+
+  // Slots
+  window.addSlot = () => {
+    const val = document.getElementById("newSlot").value;
+    if (val && !slots.includes(val)) {
+      slots = [...slots, val].sort();
+      renderSlots();
+    }
+  };
+
+  window.removeSlot = (slot) => {
+    slots = slots.filter(s => s !== slot);
+    renderSlots();
+  };
+
+  function renderSlots() {
+    document.getElementById("slotsList").innerHTML = slots.map(s => `
+      <div class="slot-chip">
+        <span>⏰ ${s}</span>
+        <button onclick="removeSlot('${s}')">✕</button>
+      </div>`).join("");
+  }
+
+  // Save
+  window.saveStore = async () => {
+    const btn = document.getElementById("saveBtn");
+    btn.disabled = true; btn.textContent = "⏳ جاري الحفظ...";
+
+    try {
+      const storeName = document.getElementById("storeName").value.trim();
+      const slug = storeName.replace(/\s+/g, "-").replace(/[^\w\u0600-\u06FF-]/g, "") + "-" + userId.slice(0,6);
+
+      // Save store info
+      await updateDoc(doc(db, "stores", userId), {
+        storeName,
+        description: document.getElementById("storeDesc").value.trim(),
+        whatsapp: document.getElementById("whatsapp").value.trim(),
+        category: selectedCategory,
+        slots,
+        maxPerSlot: parseInt(document.getElementById("maxPerSlot").value) || 5,
+        minHours: parseInt(document.getElementById("minHours").value) || 3,
+        bankName: document.getElementById("bankName").value.trim(),
+        bankAccount: document.getElementById("bankAccount").value.trim(),
+        bankIban: document.getElementById("bankIban").value.trim(),
+        slug,
+        setupDone: true,
+      });
+
+      // Save products
+      const validProducts = products.filter(p => p.name && p.price);
+      for (const p of validProducts) {
+        await addDoc(collection(db, "stores", userId, "products"), {
+          name: p.name,
+          desc: p.desc,
+          price: parseFloat(p.price),
+          emoji: p.emoji,
+        });
+      }
+
+      // Show success
+      storeSlug = slug;
+      const siteUrl = window.location.origin;
+      const storeUrl = `${siteUrl}/store.html?store=${slug}`;
+      document.getElementById("storeUrl").textContent = storeUrl;
+      window.storeUrl = storeUrl;
+
+      [1,2,3,4].forEach(s => document.getElementById(`step${s}`).style.display = "none");
+      document.getElementById("stepSuccess").style.display = "block";
+      window.scrollTo(0, 0);
+
+    } catch(e) {
+      alert("حدث خطأ، حاول مرة أخرى: " + e.message);
+      btn.disabled = false; btn.textContent = "✅ حفظ وإطلاق متجري";
+    }
+  };
+
+  window.copyLink = () => {
+    navigator.clipboard.writeText(window.storeUrl)
+      .then(() => { document.querySelector(".btn-copy").textContent = "✅ تم النسخ!"; })
+      .catch(() => { alert(window.storeUrl); });
+  };
+</script>
+</body>
+</html>
