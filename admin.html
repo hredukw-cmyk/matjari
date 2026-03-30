@@ -191,11 +191,15 @@
   };
 
   onAuthStateChanged(auth, (user) => {
-    if (user && user.email === ADMIN_EMAIL) {
+    if (user && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
       showDashboard();
       loadStores();
     } else if (user) {
-      signOut(auth);
+      // مش أدمن — ارجع للصفحة الرئيسية
+      signOut(auth).then(() => window.location.href = "index.html");
+    } else {
+      // مش مسجّل — ارجع للصفحة الرئيسية
+      window.location.href = "index.html";
     }
   });
 
