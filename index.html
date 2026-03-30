@@ -156,8 +156,12 @@
 
     try {
       if (currentTab === "login") {
-        await signInWithEmailAndPassword(auth, email, password);
-        window.location.href = "dashboard.html";
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        if (cred.user.email === "Hr.edu.kw@gmail.com") {
+          window.location.href = "admin.html";
+        } else {
+          window.location.href = "dashboard.html";
+        }
       } else {
         const storeName = document.getElementById("storeName").value.trim();
         const whatsapp = document.getElementById("whatsapp").value.trim();
