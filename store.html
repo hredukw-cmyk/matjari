@@ -5,246 +5,421 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>متجري</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;600;700;900&display=swap');
+
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8d5a0;
+    --gold-dark: #8b6914;
+    --black: #080808;
+    --black-2: #111111;
+    --black-3: #1a1a1a;
+    --black-4: #222222;
+    --white: #f5f0e8;
+    --white-dim: rgba(245,240,232,0.6);
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #fdf8f3; font-family: 'Noto Kufi Arabic', sans-serif; min-height: 100vh; }
-  .header {
-    padding: 32px 20px 24px; text-align: center; color: white;
-    position: relative; overflow: hidden;
+
+  body {
+    background: var(--black);
+    font-family: 'Noto Kufi Arabic', sans-serif;
+    color: var(--white); min-height: 100vh; overflow-x: hidden;
   }
-  .header-overlay { position: absolute; inset: 0; opacity: 0.15; background-size: cover; background-position: center; }
-  .header-content { position: relative; z-index: 1; }
-  .store-emoji { font-size: 48px; margin-bottom: 8px; }
-  .store-name { font-size: 24px; font-weight: 900; margin-bottom: 4px; }
-  .store-desc { font-size: 13px; opacity: 0.85; }
-  .cart-btn {
-    margin-top: 16px; background: rgba(255,255,255,0.2);
-    border: 1px solid rgba(255,255,255,0.3); border-radius: 50px;
-    padding: 10px 24px; color: white; font-family: inherit;
-    font-weight: 800; font-size: 14px; cursor: pointer; display: none;
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes scaleIn { from{opacity:0;transform:scale(0.96)} to{opacity:1;transform:scale(1)} }
+  @keyframes goldPulse { 0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0)} 50%{box-shadow:0 0 24px 4px rgba(201,168,76,0.25)} }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* ─── Header ─── */
+  .store-header {
+    min-height: 300px; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 56px 24px 36px; overflow: hidden;
   }
-  .main { max-width: 500px; margin: 0 auto; padding: 20px 16px; }
-  .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .header-glow {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.18) 0%, transparent 70%);
+  }
+  .header-ring {
+    position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 500px; height: 500px; border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.08);
+  }
+  .store-logo {
+    position: relative; z-index: 1; width: 76px; height: 76px; border-radius: 18px;
+    background: linear-gradient(135deg, var(--black-3), var(--black-4));
+    border: 1px solid rgba(201,168,76,0.25);
+    display: flex; align-items: center; justify-content: center; font-size: 34px;
+    margin-bottom: 18px; animation: fadeUp 0.6s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(201,168,76,0.15);
+  }
+  .gold-sep {
+    width: 50px; height: 1px; margin: 12px auto;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    position: relative; z-index: 1; animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .store-name {
+    position: relative; z-index: 1; font-size: 26px; font-weight: 900;
+    background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .store-desc {
+    position: relative; z-index: 1; font-size: 13px; color: var(--white-dim);
+    font-weight: 300; max-width: 260px; line-height: 1.8; margin-top: 6px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .store-tag {
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid rgba(201,168,76,0.2); border-radius: 50px;
+    padding: 5px 14px; font-size: 11px; font-weight: 600; color: var(--gold);
+    margin-top: 10px; background: rgba(201,168,76,0.06);
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  /* Cart float */
+  .cart-float {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 200; display: none;
+    background: linear-gradient(135deg, #1a1200, #2c1f00);
+    border: 1px solid var(--gold); border-radius: 50px;
+    padding: 13px 26px; color: var(--gold);
+    font-family: inherit; font-weight: 800; font-size: 14px; cursor: pointer;
+    white-space: nowrap; animation: goldPulse 2.5s infinite;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    transition: transform 0.2s;
+  }
+  .cart-float:hover { transform: translateX(-50%) translateY(-2px); }
+
+  /* Main */
+  .main { max-width: 500px; margin: 0 auto; padding: 8px 16px 120px; }
+
+  /* Section header */
+  .sec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .sec-head-lbl { color: var(--gold); font-size: 10px; font-weight: 700; letter-spacing: 2px; white-space: nowrap; }
+  .sec-head-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(201,168,76,0.3), transparent); }
+
+  /* Products */
+  .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+
   .product-card {
-    background: white; border-radius: 18px; overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.07); transition: transform 0.2s;
+    background: var(--black-2); border: 1px solid rgba(201,168,76,0.1);
+    border-radius: 18px; overflow: hidden; cursor: pointer;
+    transition: all 0.3s ease; animation: scaleIn 0.5s ease both;
   }
-  .product-card:hover { transform: translateY(-3px); }
-  .product-img { height: 90px; display: flex; align-items: center; justify-content: center; font-size: 42px; position: relative; }
+  .product-card:hover {
+    border-color: rgba(201,168,76,0.35); transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.08);
+  }
+  .product-visual {
+    height: 100px; position: relative;
+    display: flex; align-items: center; justify-content: center; font-size: 42px;
+    background: linear-gradient(135deg, var(--black-3), var(--black-4));
+    overflow: hidden;
+  }
+  .product-visual::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(201,168,76,0.07), transparent 70%);
+  }
+  .product-visual::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.15), transparent);
+  }
   .qty-badge {
-    position: absolute; top: 8px; left: 8px; width: 22px; height: 22px;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 11px; color: white;
+    position: absolute; top: 8px; left: 8px;
+    background: var(--gold); color: var(--black);
+    border-radius: 50%; width: 22px; height: 22px;
+    display: none; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 10px; z-index: 2;
   }
-  .product-body { padding: 12px; }
-  .product-name { font-weight: 800; font-size: 14px; margin-bottom: 3px; }
-  .product-desc { font-size: 11px; color: #9a7a65; margin-bottom: 10px; line-height: 1.5; }
+  .product-body { padding: 12px 12px 14px; }
+  .product-name { font-weight: 800; font-size: 13px; color: var(--white); margin-bottom: 3px; }
+  .product-desc { font-size: 10px; color: rgba(245,240,232,0.35); margin-bottom: 10px; line-height: 1.5; }
   .product-footer { display: flex; justify-content: space-between; align-items: center; }
-  .product-price { font-weight: 900; font-size: 14px; }
-  .btn-add {
-    border: none; border-radius: 50%; width: 30px; height: 30px;
-    font-size: 20px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center;
+  .product-price {
+    font-weight: 900; font-size: 13px;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
+  .btn-add {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border: none; color: var(--black); font-size: 18px; font-weight: 900;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(201,168,76,0.25); transition: transform 0.2s;
+  }
+  .btn-add:hover { transform: scale(1.1); }
   .qty-controls { display: flex; align-items: center; gap: 6px; }
   .qty-btn {
-    border: none; border-radius: 50%; width: 26px; height: 26px;
-    font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; border: 1px solid;
+    font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700;
   }
+  .qty-btn.minus { border-color: rgba(201,168,76,0.3); background: transparent; color: var(--gold); }
+  .qty-btn.plus { border-color: var(--gold); background: var(--gold); color: var(--black); }
+  .qty-num { color: var(--white); font-weight: 800; font-size: 13px; min-width: 14px; text-align: center; }
 
   /* Steps */
   .step { display: none; }
   .step.active { display: block; }
   .back-btn {
-    background: none; border: none; font-family: inherit; font-weight: 700;
-    font-size: 13px; cursor: pointer; margin-bottom: 20px; display: flex; align-items: center; gap: 4px;
+    background: none; border: none; color: var(--gold); font-family: inherit;
+    font-weight: 700; font-size: 13px; cursor: pointer; margin-bottom: 20px; padding: 0;
+    display: inline-flex; align-items: center; gap: 4px;
   }
-  .section-card { background: white; border-radius: 18px; padding: 18px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
-  .section-title { font-weight: 800; font-size: 14px; margin-bottom: 14px; }
-  .days-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0; }
-  .day-btn {
-    padding: 10px 16px; border-radius: 12px; border: 1.5px solid #e8d5c4;
-    background: transparent; font-family: inherit; font-weight: 700;
-    font-size: 12px; cursor: pointer; transition: all 0.2s; color: #5c3a28;
-  }
-  .day-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
-  .slots-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-  .slot-btn {
-    padding: 12px 8px; border-radius: 14px; border: 1.5px solid #e8d5c4;
-    background: transparent; font-family: inherit; cursor: pointer; transition: all 0.2s; text-align: center;
-  }
-  .slot-btn.active { border-color: var(--primary); background: var(--primary-light); }
-  .slot-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .slot-time { font-weight: 800; font-size: 15px; color: #2c1810; }
-  .slot-status { font-size: 10px; margin-top: 3px; font-weight: 600; }
-  .slot-btn.active .slot-time { color: var(--primary); }
 
-  .field { margin-bottom: 14px; }
-  .field label { display: block; font-size: 12px; font-weight: 700; color: #5c3a28; margin-bottom: 6px; }
+  /* Lux card */
+  .lux-card {
+    background: var(--black-2); border: 1px solid rgba(201,168,76,0.12);
+    border-radius: 18px; padding: 20px; margin-bottom: 14px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+  .lux-card-title { font-weight: 800; font-size: 13px; color: var(--gold); margin-bottom: 14px; }
+
+  /* Days */
+  .days-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .day-btn {
+    padding: 9px 14px; border-radius: 10px; border: 1px solid rgba(201,168,76,0.15);
+    background: transparent; color: rgba(245,240,232,0.5); font-family: inherit;
+    font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s;
+  }
+  .day-btn:hover { border-color: rgba(201,168,76,0.35); color: var(--white); }
+  .day-btn.active { border-color: var(--gold); background: rgba(201,168,76,0.1); color: var(--gold); }
+
+  /* Slots */
+  .slots-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .slot-btn {
+    padding: 11px 6px; border-radius: 12px; border: 1px solid rgba(201,168,76,0.12);
+    background: transparent; cursor: pointer; text-align: center; font-family: inherit; transition: all 0.2s;
+  }
+  .slot-btn:hover:not(:disabled) { border-color: rgba(201,168,76,0.35); }
+  .slot-btn.active { border-color: var(--gold); background: rgba(201,168,76,0.08); }
+  .slot-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .slot-time { font-weight: 800; font-size: 14px; color: var(--white); }
+  .slot-btn.active .slot-time { color: var(--gold); }
+  .slot-status { font-size: 9px; margin-top: 3px; font-weight: 600; color: rgba(245,240,232,0.35); }
+
+  /* Field */
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 10px; font-weight: 700; color: var(--gold); margin-bottom: 6px; letter-spacing: 1px; }
   .field input {
     width: 100%; padding: 11px 14px; border-radius: 10px;
-    border: 1.5px solid #e8d5c4; font-size: 14px; font-family: inherit;
-    color: #2c1810; background: #fdf8f3; outline: none;
+    border: 1px solid rgba(201,168,76,0.15); background: rgba(255,255,255,0.02);
+    color: var(--white); font-family: inherit; font-size: 13px; outline: none; transition: border-color 0.2s;
   }
-  .field input:focus { border-color: var(--primary); }
+  .field input:focus { border-color: var(--gold); background: rgba(201,168,76,0.04); }
+  .field input::placeholder { color: rgba(245,240,232,0.2); }
+  .field input:disabled { opacity: 0.4; cursor: not-allowed; }
+
   .gps-btn {
-    width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid #22c55e40;
-    background: #f0fdf4; color: #22c55e; font-family: inherit; font-weight: 700;
-    font-size: 13px; cursor: pointer; margin-bottom: 8px;
+    width: 100%; padding: 12px; border-radius: 10px;
+    border: 1px solid rgba(34,197,94,0.25); background: rgba(34,197,94,0.05);
+    color: #22c55e; font-family: inherit; font-weight: 700; font-size: 12px;
+    cursor: pointer; margin-bottom: 8px; transition: all 0.2s;
   }
-  .location-badge {
-    background: #f0fdf4; border: 1px solid #22c55e30; border-radius: 12px;
-    padding: 12px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  .loc-badge {
+    background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2);
+    border-radius: 10px; padding: 10px 12px; display: none;
+    align-items: center; gap: 10px; margin-bottom: 8px;
   }
-  .payment-options { display: flex; gap: 10px; }
-  .payment-btn {
-    flex: 1; padding: 14px 10px; border-radius: 14px; border: 1.5px solid #e8d5c4;
-    background: transparent; cursor: pointer; font-family: inherit; text-align: center; transition: all 0.2s;
+
+  /* Payment */
+  .pay-row { display: flex; gap: 10px; }
+  .pay-btn {
+    flex: 1; padding: 14px 8px; border-radius: 14px; border: 1px solid rgba(201,168,76,0.12);
+    background: transparent; cursor: pointer; text-align: center; font-family: inherit; transition: all 0.2s;
   }
-  .payment-btn.active { border-color: var(--primary); background: var(--primary-light); }
-  .payment-icon { font-size: 24px; margin-bottom: 6px; }
-  .payment-label { font-size: 12px; font-weight: 700; color: #5c3a28; }
-  .payment-btn.active .payment-label { color: var(--primary); }
-  .transfer-info {
-    background: #f0fdf4; border: 1px solid #22c55e30; border-radius: 12px;
-    padding: 14px; margin-top: 10px; display: none;
+  .pay-btn:hover { border-color: rgba(201,168,76,0.3); }
+  .pay-btn.active { border-color: var(--gold); background: rgba(201,168,76,0.07); }
+  .pay-icon { font-size: 24px; margin-bottom: 5px; }
+  .pay-label { font-size: 11px; font-weight: 700; color: rgba(245,240,232,0.45); }
+  .pay-btn.active .pay-label { color: var(--gold); }
+  .transfer-box {
+    margin-top: 12px; background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.15);
+    border-radius: 12px; padding: 14px; display: none;
   }
-  .submit-btn {
-    width: 100%; padding: 15px; border: none; border-radius: 14px;
-    color: white; font-family: inherit; font-weight: 800; font-size: 15px;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .submit-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 
   /* Summary */
-  .summary-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5ede6; font-size: 13px; }
-  .summary-total { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 2px solid #f0ddd0; }
+  .sum-item {
+    display: flex; justify-content: space-between; padding: 9px 0;
+    border-bottom: 1px solid rgba(201,168,76,0.07); font-size: 13px;
+  }
+  .sum-item-n { color: var(--white-dim); }
+  .sum-item-p { color: var(--gold); font-weight: 700; }
+  .sum-total { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 4px; border-top: 1px solid rgba(201,168,76,0.15); }
+  .sum-total-l { color: var(--white); font-weight: 900; font-size: 15px; }
+  .sum-total-v {
+    font-weight: 900; font-size: 18px;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  /* Delivery badge */
+  .del-badge {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(201,168,76,0.05); border: 1px solid rgba(201,168,76,0.18);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;
+  }
+
+  /* CTA */
+  .cta-btn {
+    width: 100%; padding: 16px; border: none; border-radius: 14px;
+    background: linear-gradient(135deg, #1a1200, var(--gold-dark) 40%, var(--gold));
+    color: var(--black); font-family: inherit; font-weight: 900;
+    font-size: 15px; cursor: pointer; transition: all 0.3s;
+    box-shadow: 0 8px 28px rgba(201,168,76,0.25); letter-spacing: 0.5px;
+  }
+  .cta-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(201,168,76,0.35); }
+  .cta-btn:disabled { background: var(--black-3); color: rgba(245,240,232,0.15); cursor: not-allowed; box-shadow: none; }
 
   /* Success */
-  .success-screen { text-align: center; padding: 40px 20px; }
-  .success-emoji { font-size: 64px; margin-bottom: 16px; }
-  .success-title { font-size: 24px; font-weight: 900; color: #2c1810; margin-bottom: 8px; }
-  .success-sub { color: #9a7a65; font-size: 14px; line-height: 1.8; margin-bottom: 24px; }
-  .loading { text-align: center; padding: 60px; font-size: 16px; font-weight: 700; }
+  .success-sc { text-align: center; padding: 60px 20px; }
+  .success-ring {
+    width: 96px; height: 96px; border-radius: 50%; margin: 0 auto 20px;
+    background: linear-gradient(135deg, var(--black-3), var(--black-4));
+    border: 1px solid rgba(201,168,76,0.25);
+    display: flex; align-items: center; justify-content: center; font-size: 44px;
+    box-shadow: 0 0 40px rgba(201,168,76,0.12);
+  }
+  .success-title {
+    font-size: 24px; font-weight: 900;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 8px;
+  }
+  .success-sub { color: var(--white-dim); font-size: 13px; line-height: 1.8; margin-bottom: 28px; }
+  .wa-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(37,211,102,0.08); border: 1px solid rgba(37,211,102,0.25);
+    color: #25D366; text-decoration: none; border-radius: 50px;
+    padding: 13px 26px; font-weight: 700; font-size: 14px; font-family: inherit; transition: all 0.2s;
+  }
+
+  /* Loading */
+  .loading-sc { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; }
+  .spinner { width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(201,168,76,0.1); border-top-color: var(--gold); animation: spin 1s linear infinite; }
+  .loading-txt { color: rgba(245,240,232,0.3); font-size: 13px; }
 </style>
 </head>
 <body>
 
-<div id="loadingScreen" class="loading">⏳ جاري تحميل المتجر...</div>
-<div id="notFound" style="display:none;text-align:center;padding:60px;color:#9a7a65;font-size:14px">المتجر غير موجود 😕</div>
+<div id="loadingScreen" class="loading-sc">
+  <div class="spinner"></div>
+  <div class="loading-txt">جاري تحميل المتجر...</div>
+</div>
+<div id="notFound" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:rgba(245,240,232,0.3);font-size:14px;flex-direction:column">
+  <div style="font-size:48px">😕</div><div>المتجر غير موجود</div>
+</div>
 
 <div id="storeContent" style="display:none">
-  <!-- Header -->
-  <div class="header" id="storeHeader">
-    <div class="header-content">
-      <div class="store-emoji" id="storeEmoji">🍽️</div>
-      <div class="store-name" id="storeName">...</div>
-      <div class="store-desc" id="storeDesc">...</div>
-      <button class="cart-btn" id="cartBtn" onclick="goToSchedule()">🛒 <span id="cartSummary"></span></button>
-    </div>
+
+  <div class="store-header">
+    <div class="header-glow"></div>
+    <div class="header-ring"></div>
+    <div class="store-logo" id="storeEmoji">🍽️</div>
+    <div class="gold-sep"></div>
+    <div class="store-name" id="storeName">...</div>
+    <div class="store-desc" id="storeDesc"></div>
+    <div class="store-tag" id="storeTag">✨ متجر فاخر</div>
   </div>
+
+  <button class="cart-float" id="cartFloat" onclick="goTo(2)">🛒 <span id="cartSummary"></span></button>
 
   <div class="main">
 
-    <!-- Step 1: Browse -->
+    <!-- Browse -->
     <div class="step active" id="step1">
+      <div class="sec-head">
+        <div class="sec-head-lbl">المنتجات</div>
+        <div class="sec-head-line"></div>
+      </div>
       <div class="products-grid" id="productsGrid"></div>
     </div>
 
-    <!-- Step 2: Schedule -->
+    <!-- Schedule -->
     <div class="step" id="step2">
-      <button class="back-btn" onclick="goTo(1)" style="color:var(--primary)">← رجوع للمنتجات</button>
-
-      <div class="section-card">
-        <div class="section-title">📅 اختار يوم التسليم</div>
-        <div class="days-grid" id="daysGrid"></div>
+      <button class="back-btn" onclick="goTo(1)">← رجوع</button>
+      <div class="lux-card">
+        <div class="lux-card-title">📅 اختار يوم التسليم</div>
+        <div class="days-row" id="daysGrid"></div>
       </div>
-
-      <div class="section-card" id="slotsCard" style="display:none">
-        <div class="section-title">⏰ اختار الوقت</div>
+      <div class="lux-card" id="slotsCard" style="display:none">
+        <div class="lux-card-title">⏰ اختار الوقت</div>
         <div class="slots-grid" id="slotsGrid"></div>
       </div>
-
-      <button class="submit-btn" id="nextToCheckout" onclick="goTo(3)" disabled style="background:#d4b8a8">
-        التالي ← بيانات التوصيل
-      </button>
+      <button class="cta-btn" id="nextBtn" onclick="goTo(3)" disabled>التالي ← بيانات التوصيل</button>
     </div>
 
-    <!-- Step 3: Checkout -->
+    <!-- Checkout -->
     <div class="step" id="step3">
-      <button class="back-btn" onclick="goTo(2)" style="color:var(--primary)">← تغيير الموعد</button>
+      <button class="back-btn" onclick="goTo(2)">← تغيير الموعد</button>
 
-      <!-- Delivery badge -->
-      <div class="section-card" style="display:flex;align-items:center;gap:10px">
+      <div class="del-badge">
         <span style="font-size:20px">📅</span>
         <div style="flex:1">
-          <div style="font-weight:800;font-size:13px" id="selectedDateTime"></div>
-          <div style="color:#9a7a65;font-size:11px">موعد التسليم</div>
+          <div style="color:var(--gold);font-weight:800;font-size:14px" id="selectedDateTime"></div>
+          <div style="color:var(--white-dim);font-size:11px">موعد التسليم</div>
         </div>
-        <button onclick="goTo(2)" style="background:none;border:none;color:#9a7a65;font-size:12px;cursor:pointer">تغيير</button>
+        <button onclick="goTo(2)" style="background:none;border:none;color:rgba(245,240,232,0.3);font-family:inherit;font-size:12px;cursor:pointer">تغيير</button>
       </div>
 
-      <!-- Order Summary -->
-      <div class="section-card">
-        <div class="section-title">🧾 ملخص الطلب</div>
+      <div class="lux-card">
+        <div class="lux-card-title">🧾 ملخص الطلب</div>
         <div id="orderSummary"></div>
       </div>
 
-      <!-- Delivery Info -->
-      <div class="section-card">
-        <div class="section-title">📍 بيانات التوصيل</div>
+      <div class="lux-card">
+        <div class="lux-card-title">📍 بيانات التوصيل</div>
         <div class="field"><label>الاسم</label><input type="text" id="custName" placeholder="اسمك الكريم"/></div>
         <div class="field"><label>رقم الهاتف</label><input type="tel" id="custPhone" placeholder="05XXXXXXXX" dir="ltr"/></div>
         <div class="field">
-          <label>موقع التوصيل</label>
-          <button class="gps-btn" onclick="getLocation()">📡 تحديد موقعي تلقائياً</button>
-          <div id="locationBadge" class="location-badge" style="display:none">
-            <span style="font-size:20px">📍</span>
-            <div style="flex:1"><div style="font-weight:800;font-size:14px" id="locationArea"></div><div style="color:#9a7a65;font-size:11px" id="locationCoords"></div></div>
-            <button onclick="clearLocation()" style="background:none;border:none;color:#9a7a65;cursor:pointer;font-size:16px">✕</button>
+          <label>الموقع</label>
+          <button class="gps-btn" id="gpsBtn" onclick="getLocation()">📡 تحديد موقعي تلقائياً</button>
+          <div id="locBadge" class="loc-badge">
+            <span style="font-size:18px">📍</span>
+            <div style="flex:1">
+              <div style="font-weight:800;font-size:13px;color:var(--white)" id="locArea"></div>
+              <div style="color:rgba(245,240,232,0.35);font-size:10px" id="locCoords" dir="ltr"></div>
+            </div>
+            <button onclick="clearLoc()" style="background:none;border:none;color:rgba(245,240,232,0.3);cursor:pointer;font-size:15px">✕</button>
           </div>
           <input type="text" id="custAddress" placeholder="أو اكتب العنوان يدوياً..."/>
         </div>
-        <div class="field"><label>ملاحظات (اختياري)</label><input type="text" id="custNotes" placeholder="أي تعليمات خاصة..."/></div>
+        <div class="field"><label>ملاحظات</label><input type="text" id="custNotes" placeholder="أي تعليمات خاصة..."/></div>
       </div>
 
-      <!-- Payment -->
-      <div class="section-card">
-        <div class="section-title">💳 طريقة الدفع</div>
-        <div class="payment-options">
-          <button class="payment-btn" onclick="selectPayment('cash')" id="payCash">
-            <div class="payment-icon">💵</div>
-            <div class="payment-label">كاش عند التسليم</div>
-          </button>
-          <button class="payment-btn" onclick="selectPayment('transfer')" id="payTransfer">
-            <div class="payment-icon">🏦</div>
-            <div class="payment-label">تحويل بنكي</div>
-          </button>
+      <div class="lux-card">
+        <div class="lux-card-title">💳 طريقة الدفع</div>
+        <div class="pay-row">
+          <button class="pay-btn" onclick="selPay('cash')" id="payCash"><div class="pay-icon">💵</div><div class="pay-label">كاش عند التسليم</div></button>
+          <button class="pay-btn" onclick="selPay('transfer')" id="payTrans"><div class="pay-icon">🏦</div><div class="pay-label">تحويل بنكي</div></button>
         </div>
-        <div class="transfer-info" id="transferInfo">
-          <div style="color:#22c55e;font-weight:800;font-size:13px;margin-bottom:8px">📋 بيانات التحويل</div>
-          <div style="color:#555;font-size:13px;line-height:2">
-            البنك: <strong style="color:#2c1810" id="bankName">-</strong><br/>
-            الاسم: <strong style="color:#2c1810" id="bankAccount">-</strong><br/>
-            IBAN: <strong style="color:#2c1810;direction:ltr;display:inline-block" id="bankIban">-</strong>
+        <div class="transfer-box" id="transferBox">
+          <div style="color:#22c55e;font-weight:800;font-size:12px;margin-bottom:8px">📋 بيانات التحويل</div>
+          <div style="color:rgba(245,240,232,0.5);font-size:12px;line-height:2">
+            البنك: <strong style="color:var(--white)" id="bankName">-</strong><br/>
+            الاسم: <strong style="color:var(--white)" id="bankAccount">-</strong><br/>
+            IBAN: <strong style="color:var(--white);direction:ltr;display:inline-block" id="bankIban">-</strong>
           </div>
-          <div style="color:#f59e0b;font-size:12px;font-weight:600;margin-top:8px">⚠️ أرسل إيصال التحويل على الواتساب بعد الطلب</div>
+          <div style="color:#f59e0b;font-size:11px;font-weight:600;margin-top:8px">⚠️ أرسل إيصال التحويل على الواتساب</div>
         </div>
       </div>
 
-      <button class="submit-btn" id="submitOrder" onclick="placeOrder()" disabled style="background:#d4b8a8">
-        ✅ تأكيد الطلب
-      </button>
+      <button class="cta-btn" id="submitBtn" onclick="placeOrder()" disabled>✨ تأكيد الطلب</button>
     </div>
 
-    <!-- Step 4: Success -->
+    <!-- Success -->
     <div class="step" id="step4">
-      <div class="success-screen">
-        <div class="success-emoji">🎉</div>
+      <div class="success-sc">
+        <div class="success-ring">🎉</div>
+        <div class="gold-sep"></div>
         <div class="success-title">تم استلام طلبك!</div>
         <div class="success-sub" id="successMsg"></div>
-        <a id="waLink" href="#" target="_blank" style="display:inline-block;background:#25D366;color:white;text-decoration:none;border-radius:14px;padding:14px 28px;font-weight:700;font-size:15px">💬 تواصل عبر واتساب</a>
+        <a id="waLink" href="#" target="_blank" class="wa-btn">💬 تواصل عبر واتساب</a>
         <br/><br/>
-        <button onclick="goTo(1);resetOrder()" style="background:none;border:none;color:var(--primary);font-family:inherit;font-weight:700;font-size:14px;cursor:pointer">طلب جديد</button>
+        <button onclick="resetOrder()" style="background:none;border:none;color:var(--gold);font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;opacity:0.6">طلب جديد</button>
       </div>
     </div>
 
@@ -256,336 +431,218 @@
   import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-  const firebaseConfig = {
+  const app = initializeApp({
     apiKey: "AIzaSyA9aysxwa-S7GmRbBxjOTrjgOG4_c3fT4k",
     authDomain: "matgary-2f25f.firebaseapp.com",
     projectId: "matgary-2f25f",
     storageBucket: "matgary-2f25f.firebasestorage.app",
     messagingSenderId: "360734383265",
     appId: "1:360734383265:web:e9dbf5f3048fecb76ea4e0",
-  };
-
-  const app = initializeApp(firebaseConfig);
+  });
   const db = getFirestore(app);
 
-  let storeData = null;
-  let products = [];
-  let cart = {};
-  let selectedDate = "";
-  let selectedSlot = "";
-  let selectedPayment = "";
-  let userLat = null, userLng = null, userArea = "";
+  let storeData=null, products=[], cart={};
+  let selDate="", selSlot="", selPay="";
+  let lat=null, lng=null, area="";
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const storeSlug = urlParams.get("store");
+  const slug = new URLSearchParams(window.location.search).get("store");
+  const total = () => Object.entries(cart).reduce((s,[id,q])=>{const p=products.find(p=>p.id===id);return s+(p?p.price*q:0);},0);
 
-  const orderTotal = () =>
-    Object.entries(cart).reduce((s, [id, qty]) => {
-      const p = products.find(p => p.id === id);
-      return s + (p ? p.price * qty : 0);
-    }, 0);
-
-  // Load store
-  async function loadStore() {
-    if (!storeSlug) { showNotFound(); return; }
+  async function init() {
+    if (!slug) { showNF(); return; }
     try {
-      const q = query(collection(db, "stores"), where("slug", "==", storeSlug));
-      const snap = await getDocs(q);
-      if (snap.empty) { showNotFound(); return; }
-      storeData = { id: snap.docs[0].id, ...snap.docs[0].data() };
-      renderStore();
-    } catch (e) { showNotFound(); }
+      const snap = await getDocs(query(collection(db,"stores"),where("slug","==",slug)));
+      if (snap.empty) { showNF(); return; }
+      storeData = {id:snap.docs[0].id,...snap.docs[0].data()};
+      await render();
+    } catch(e) { showNF(); }
   }
 
-  function showNotFound() {
-    document.getElementById("loadingScreen").style.display = "none";
-    document.getElementById("notFound").style.display = "block";
+  function showNF() {
+    document.getElementById("loadingScreen").style.display="none";
+    document.getElementById("notFound").style.display="flex";
   }
 
-  async function renderStore() {
-    const theme = getTheme(storeData.category || "restaurant");
-    document.documentElement.style.setProperty("--primary", theme.primary);
-    document.documentElement.style.setProperty("--primary-light", theme.light);
-    document.getElementById("storeHeader").style.background = theme.headerBg;
-    document.getElementById("storeEmoji").textContent = theme.emoji;
+  async function render() {
+    const tags = {restaurant:"🍽️ أشهى الأكلات",fashion:"👗 كولكشن جديد",sweets:"🧁 محضّر بالحب",beauty:"💄 فاخر وأصيل",organic:"🌿 طبيعي 100%",general:"📦 توصيل سريع"};
+    const emojis = {restaurant:"🍽️",fashion:"👗",sweets:"🧁",beauty:"💄",organic:"🌿",general:"📦"};
+    const cat = storeData.category||"restaurant";
+    document.getElementById("storeEmoji").textContent = emojis[cat]||"🍽️";
     document.getElementById("storeName").textContent = storeData.storeName;
-    document.getElementById("storeDesc").textContent = storeData.description || "";
+    document.getElementById("storeDesc").textContent = storeData.description||"";
+    document.getElementById("storeTag").textContent = "✨ " + (tags[cat]||"متجر فاخر");
     document.title = storeData.storeName + " — متجري";
+    if(storeData.bankName) document.getElementById("bankName").textContent=storeData.bankName;
+    if(storeData.bankAccount) document.getElementById("bankAccount").textContent=storeData.bankAccount;
+    if(storeData.bankIban) document.getElementById("bankIban").textContent=storeData.bankIban;
 
-    // Bank info
-    if (storeData.bankName) document.getElementById("bankName").textContent = storeData.bankName;
-    if (storeData.bankAccount) document.getElementById("bankAccount").textContent = storeData.bankAccount;
-    if (storeData.bankIban) document.getElementById("bankIban").textContent = storeData.bankIban;
-
-    // Load products
-    const pSnap = await getDocs(collection(db, "stores", storeData.id, "products"));
-    products = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderProducts(theme);
-    renderDays();
-
-    document.getElementById("loadingScreen").style.display = "none";
-    document.getElementById("storeContent").style.display = "block";
+    const ps = await getDocs(collection(db,"stores",storeData.id,"products"));
+    products = ps.docs.map(d=>({id:d.id,...d.data()}));
+    renderProds(); renderDays();
+    document.getElementById("loadingScreen").style.display="none";
+    document.getElementById("storeContent").style.display="block";
   }
 
-  function renderProducts(theme) {
-    const grid = document.getElementById("productsGrid");
-    grid.innerHTML = products.map(p => `
-      <div class="product-card">
-        <div class="product-img" style="background:linear-gradient(135deg,${theme.primary}22,${theme.light})">
-          <span>${p.emoji || "🍽️"}</span>
-          <div class="qty-badge" id="badge-${p.id}" style="background:${theme.primary};display:none"></div>
+  function renderProds() {
+    document.getElementById("productsGrid").innerHTML = products.map((p,i)=>`
+      <div class="product-card" style="animation-delay:${i*0.08}s">
+        <div class="product-visual">
+          <span>${p.emoji||"🍽️"}</span>
+          <div class="qty-badge" id="b-${p.id}"></div>
         </div>
         <div class="product-body">
-          <div class="product-name" style="color:#2c1810">${p.name}</div>
-          <div class="product-desc">${p.desc || ""}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-desc">${p.desc||""}</div>
           <div class="product-footer">
-            <span class="product-price" style="color:${theme.primary}">${p.price.toFixed(3)} KWD</span>
-            <div id="ctrl-${p.id}">
-              <button class="btn-add" onclick="addItem('${p.id}')" style="background:${theme.primary}">+</button>
-            </div>
+            <div class="product-price">${parseFloat(p.price).toFixed(3)} KWD</div>
+            <div id="c-${p.id}"><button class="btn-add" onclick="addItem('${p.id}')">+</button></div>
           </div>
         </div>
       </div>`).join("");
   }
 
   function renderDays() {
-    const slots = storeData.slots || ["07:00","08:00","09:00","12:00","13:00"];
-    const days = [];
-    for (let i = 0; i < 5; i++) {
-      const d = new Date(); d.setDate(d.getDate() + i);
-      const val = d.toISOString().split("T")[0];
-      const lbl = i === 0 ? "اليوم" : i === 1 ? "غداً" : d.toLocaleDateString("ar-KW", { weekday: "short", day: "numeric", month: "short" });
-      days.push({ val, lbl });
+    const days=[];
+    for(let i=0;i<5;i++){
+      const d=new Date(); d.setDate(d.getDate()+i);
+      const v=d.toISOString().split("T")[0];
+      const l=i===0?"اليوم":i===1?"غداً":d.toLocaleDateString("ar-KW",{weekday:"short",day:"numeric",month:"short"});
+      days.push({v,l});
     }
-    document.getElementById("daysGrid").innerHTML = days.map(d =>
-      `<button class="day-btn" onclick="selectDay('${d.val}','${d.lbl}')">${d.lbl}</button>`
-    ).join("");
+    document.getElementById("daysGrid").innerHTML=days.map(d=>`<button class="day-btn" onclick="selDay('${d.v}','${d.l}')">${d.l}</button>`).join("");
   }
 
-  window.selectDay = (val, lbl) => {
-    selectedDate = val;
-    selectedSlot = "";
-    document.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
+  window.selDay=(v,l)=>{
+    selDate=v; selSlot="";
+    document.querySelectorAll(".day-btn").forEach(b=>b.classList.remove("active"));
     event.target.classList.add("active");
-    document.getElementById("slotsCard").style.display = "block";
-    renderSlots(val);
-    checkScheduleValid();
-  };
-
-  function renderSlots(date) {
-    const slots = storeData.slots || ["07:00","08:00","09:00","12:00","13:00"];
-    const maxPerSlot = storeData.maxPerSlot || 5;
-    document.getElementById("slotsGrid").innerHTML = slots.map(slot => {
-      const key = `${date}_${slot}`;
-      const booked = storeData.booked?.[key] || 0;
-      const available = booked < maxPerSlot;
-      const remaining = maxPerSlot - booked;
-      return `
-        <button class="slot-btn" ${!available ? "disabled" : ""} onclick="selectSlot('${slot}')">
-          <div class="slot-time">${slot}</div>
-          <div class="slot-status" style="color:${!available ? '#333' : remaining <= 2 ? '#f87171' : '#9a7a65'}">
-            ${!available ? "ممتلئ" : remaining <= 2 ? `${remaining} متبقي` : "متاح"}
-          </div>
-        </button>`;
+    document.getElementById("slotsCard").style.display="block";
+    const slots=storeData.slots||["07:00","08:00","09:00","12:00","13:00"];
+    const max=storeData.maxPerSlot||5;
+    document.getElementById("slotsGrid").innerHTML=slots.map(s=>{
+      const b=storeData.booked?.[`${v}_${s}`]||0;
+      const av=b<max; const rem=max-b;
+      return `<button class="slot-btn" ${!av?"disabled":""} onclick="selSlot('${s}')">
+        <div class="slot-time">${s}</div>
+        <div class="slot-status" style="color:${!av?"rgba(245,240,232,0.15)":rem<=2?"#f87171":"rgba(245,240,232,0.35)"}">
+          ${!av?"ممتلئ":rem<=2?`${rem} متبقي`:"متاح"}</div></button>`;
     }).join("");
-  }
+    chk2();
+  };
 
-  window.selectSlot = (slot) => {
-    selectedSlot = slot;
-    document.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("active"));
+  window.selSlot=s=>{
+    selSlot=s;
+    document.querySelectorAll(".slot-btn").forEach(b=>b.classList.remove("active"));
     event.target.classList.add("active");
-    checkScheduleValid();
+    chk2();
   };
 
-  function checkScheduleValid() {
-    const btn = document.getElementById("nextToCheckout");
-    const valid = selectedDate && selectedSlot;
-    btn.disabled = !valid;
-    btn.style.background = valid ? `linear-gradient(135deg, var(--primary), #8b4513)` : "#d4b8a8";
+  function chk2(){document.getElementById("nextBtn").disabled=!(selDate&&selSlot);}
+
+  window.addItem=id=>{cart[id]=(cart[id]||0)+1;updCart(id);};
+  window.removeItem=id=>{if(cart[id]>1)cart[id]--;else delete cart[id];updCart(id);};
+
+  function updCart(id){
+    const q=cart[id]||0;
+    const badge=document.getElementById(`b-${id}`);
+    const ctrl=document.getElementById(`c-${id}`);
+    if(q===0){badge.style.display="none";ctrl.innerHTML=`<button class="btn-add" onclick="addItem('${id}')">+</button>`;}
+    else{badge.textContent=q;badge.style.display="flex";
+      ctrl.innerHTML=`<div class="qty-controls"><button class="qty-btn minus" onclick="removeItem('${id}')">−</button><span class="qty-num">${q}</span><button class="qty-btn plus" onclick="addItem('${id}')">+</button></div>`;}
+    const t=total(); const items=Object.values(cart).reduce((a,b)=>a+b,0);
+    const f=document.getElementById("cartFloat");
+    if(items>0){f.style.display="block";document.getElementById("cartSummary").textContent=`${items} منتج — ${t.toFixed(3)} KWD`;}
+    else f.style.display="none";
   }
 
-  window.addItem = (id) => {
-    cart[id] = (cart[id] || 0) + 1;
-    updateCart(id);
-  };
-
-  window.removeItem = (id) => {
-    if (cart[id] > 1) cart[id]--;
-    else delete cart[id];
-    updateCart(id);
-  };
-
-  function updateCart(id) {
-    const qty = cart[id] || 0;
-    const badge = document.getElementById(`badge-${id}`);
-    const ctrl = document.getElementById(`ctrl-${id}`);
-    const theme = getTheme(storeData?.category || "restaurant");
-
-    if (qty === 0) {
-      badge.style.display = "none";
-      ctrl.innerHTML = `<button class="btn-add" onclick="addItem('${id}')" style="background:${theme.primary}">+</button>`;
-    } else {
-      badge.textContent = qty; badge.style.display = "flex";
-      ctrl.innerHTML = `
-        <div class="qty-controls">
-          <button class="qty-btn" onclick="removeItem('${id}')" style="background:#e0c9b8;color:#2c1810">−</button>
-          <span style="font-weight:800;color:#2c1810;font-size:14px">${qty}</span>
-          <button class="qty-btn" onclick="addItem('${id}')" style="background:${theme.primary};color:white">+</button>
-        </div>`;
-    }
-
-    const total = orderTotal();
-    const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
-    const cartBtn = document.getElementById("cartBtn");
-    if (totalItems > 0) {
-      cartBtn.style.display = "inline-block";
-      document.getElementById("cartSummary").textContent = `${totalItems} منتج — ${total.toFixed(3)} KWD`;
-    } else {
-      cartBtn.style.display = "none";
-    }
-  }
-
-  window.goToSchedule = () => goTo(2);
-
-  window.goTo = (step) => {
-    document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+  window.goTo=step=>{
+    document.querySelectorAll(".step").forEach(s=>s.classList.remove("active"));
     document.getElementById(`step${step}`).classList.add("active");
-    if (step === 3) renderCheckout();
-    window.scrollTo(0, 0);
+    if(step===3)renderCO();
+    window.scrollTo({top:0,behavior:"smooth"});
   };
 
-  function renderCheckout() {
-    const theme = getTheme(storeData?.category || "restaurant");
-    document.getElementById("selectedDateTime").textContent = `${selectedDate} — الساعة ${selectedSlot}`;
-    document.getElementById("selectedDateTime").style.color = theme.primary;
-
-    const cartItems = Object.entries(cart).map(([id, qty]) => {
-      const p = products.find(p => p.id === id);
-      return p ? `<div class="summary-item"><span style="color:#5c3a28">${p.name} × ${qty}</span><span style="color:${theme.primary};font-weight:700">${(p.price * qty).toFixed(3)} KWD</span></div>` : "";
+  function renderCO(){
+    document.getElementById("selectedDateTime").textContent=`${selDate} — الساعة ${selSlot}`;
+    const items=Object.entries(cart).map(([id,q])=>{
+      const p=products.find(p=>p.id===id);
+      return p?`<div class="sum-item"><span class="sum-item-n">${p.name} × ${q}</span><span class="sum-item-p">${(p.price*q).toFixed(3)} KWD</span></div>`:"";
     }).join("");
-
-    document.getElementById("orderSummary").innerHTML = cartItems + `
-      <div class="summary-total">
-        <span style="font-weight:900;font-size:16px;color:#2c1810">الإجمالي</span>
-        <span style="font-weight:900;font-size:18px;color:${theme.primary}">${orderTotal().toFixed(3)} KWD</span>
-      </div>`;
-
-    ["custName","custPhone"].forEach(id => {
-      document.getElementById(id).addEventListener("input", checkOrderValid);
-    });
+    document.getElementById("orderSummary").innerHTML=items+`
+      <div class="sum-total"><span class="sum-total-l">الإجمالي</span><span class="sum-total-v">${total().toFixed(3)} KWD</span></div>`;
+    ["custName","custPhone","custAddress"].forEach(id=>document.getElementById(id).addEventListener("input",chk3));
   }
 
-  window.getLocation = async () => {
-    const btn = event.target;
-    btn.textContent = "⏳ جاري التحديد..."; btn.disabled = true;
-    try {
-      const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 10000 }));
-      userLat = pos.coords.latitude; userLng = pos.coords.longitude;
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json&accept-language=ar`);
-      const data = await res.json();
-      userArea = data.address?.suburb || data.address?.city_district || data.address?.city || "موقعك الحالي";
-      document.getElementById("locationArea").textContent = userArea;
-      document.getElementById("locationCoords").textContent = `${userLat.toFixed(5)}, ${userLng.toFixed(5)}`;
-      document.getElementById("locationBadge").style.display = "flex";
-      document.getElementById("custAddress").value = "";
-      document.getElementById("custAddress").disabled = true;
-      btn.style.display = "none";
-      checkOrderValid();
-    } catch(e) {
-      alert("تعذّر تحديد الموقع — اكتب العنوان يدوياً");
-      btn.textContent = "📡 تحديد موقعي تلقائياً"; btn.disabled = false;
-    }
+  window.getLocation=async()=>{
+    const btn=document.getElementById("gpsBtn");
+    btn.textContent="⏳ جاري التحديد..."; btn.disabled=true;
+    try{
+      const pos=await new Promise((r,j)=>navigator.geolocation.getCurrentPosition(r,j,{timeout:10000}));
+      lat=pos.coords.latitude; lng=pos.coords.longitude;
+      const res=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ar`);
+      const data=await res.json();
+      area=data.address?.suburb||data.address?.city_district||data.address?.city||"موقعك الحالي";
+      document.getElementById("locArea").textContent=area;
+      document.getElementById("locCoords").textContent=`${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      document.getElementById("locBadge").style.display="flex";
+      document.getElementById("custAddress").disabled=true;
+      btn.style.display="none"; chk3();
+    }catch(e){alert("تعذّر تحديد الموقع");btn.textContent="📡 تحديد موقعي تلقائياً";btn.disabled=false;}
   };
 
-  window.clearLocation = () => {
-    userLat = null; userLng = null; userArea = "";
-    document.getElementById("locationBadge").style.display = "none";
-    document.getElementById("custAddress").disabled = false;
-    document.querySelector(".gps-btn").style.display = "block";
-    checkOrderValid();
+  window.clearLoc=()=>{
+    lat=null;lng=null;area="";
+    document.getElementById("locBadge").style.display="none";
+    document.getElementById("custAddress").disabled=false;
+    document.getElementById("gpsBtn").style.display="block";
+    chk3();
   };
 
-  window.selectPayment = (method) => {
-    selectedPayment = method;
-    document.getElementById("payCash").classList.toggle("active", method === "cash");
-    document.getElementById("payTransfer").classList.toggle("active", method === "transfer");
-    document.getElementById("transferInfo").style.display = method === "transfer" ? "block" : "none";
-    checkOrderValid();
+  window.selPay=method=>{
+    selPay=method;
+    document.getElementById("payCash").classList.toggle("active",method==="cash");
+    document.getElementById("payTrans").classList.toggle("active",method==="transfer");
+    document.getElementById("transferBox").style.display=method==="transfer"?"block":"none";
+    chk3();
   };
 
-  function checkOrderValid() {
-    const name = document.getElementById("custName").value.trim();
-    const phone = document.getElementById("custPhone").value.trim();
-    const address = userArea || document.getElementById("custAddress").value.trim();
-    const valid = name && phone && address && selectedPayment && Object.keys(cart).length > 0;
-    const btn = document.getElementById("submitOrder");
-    const theme = getTheme(storeData?.category || "restaurant");
-    btn.disabled = !valid;
-    btn.style.background = valid ? `linear-gradient(135deg, ${theme.primary}, #8b4513)` : "#d4b8a8";
+  function chk3(){
+    const n=document.getElementById("custName").value.trim();
+    const p=document.getElementById("custPhone").value.trim();
+    const a=area||document.getElementById("custAddress").value.trim();
+    document.getElementById("submitBtn").disabled=!(n&&p&&a&&selPay&&Object.keys(cart).length>0);
   }
 
-  window.placeOrder = async () => {
-    const btn = document.getElementById("submitOrder");
-    btn.disabled = true; btn.textContent = "⏳ جاري الإرسال...";
-
-    try {
-      const cartItems = Object.entries(cart).map(([id, qty]) => {
-        const p = products.find(p => p.id === id);
-        return { name: p.name, qty, price: p.price };
+  window.placeOrder=async()=>{
+    const btn=document.getElementById("submitBtn");
+    btn.disabled=true; btn.textContent="⏳ جاري الإرسال...";
+    try{
+      const items=Object.entries(cart).map(([id,q])=>{const p=products.find(p=>p.id===id);return{name:p.name,qty:q,price:p.price};});
+      await addDoc(collection(db,"orders"),{
+        storeId:storeData.id,
+        customerName:document.getElementById("custName").value.trim(),
+        customerPhone:document.getElementById("custPhone").value.trim(),
+        address:area||document.getElementById("custAddress").value.trim(),
+        area:area||document.getElementById("custAddress").value.trim().split("،")[0]||"غير محدد",
+        lat,lng,
+        notes:document.getElementById("custNotes").value.trim(),
+        items,total:total(),payment:selPay,
+        deliveryDate:selDate,deliveryTime:selSlot,
+        status:"new",createdAt:serverTimestamp(),
       });
-
-      await addDoc(collection(db, "orders"), {
-        storeId: storeData.id,
-        customerName: document.getElementById("custName").value.trim(),
-        customerPhone: document.getElementById("custPhone").value.trim(),
-        address: userArea || document.getElementById("custAddress").value.trim(),
-        area: userArea || document.getElementById("custAddress").value.trim().split("،")[0],
-        lat: userLat, lng: userLng,
-        notes: document.getElementById("custNotes").value.trim(),
-        items: cartItems,
-        total: orderTotal(),
-        payment: selectedPayment,
-        deliveryDate: selectedDate,
-        deliveryTime: selectedSlot,
-        status: "new",
-        createdAt: serverTimestamp(),
-      });
-
-      // Success screen
-      document.getElementById("successMsg").innerHTML =
-        `شكراً ${document.getElementById("custName").value}!<br/>طلبك سيصل الساعة <strong>${selectedSlot}</strong> بتاريخ <strong>${selectedDate}</strong>`;
-      document.getElementById("waLink").href = `https://wa.me/965${storeData.whatsapp}?text=مرحبا، أرسلت طلباً من متجرك`;
+      document.getElementById("successMsg").innerHTML=`شكراً ${document.getElementById("custName").value}!<br/>طلبك سيصل الساعة <strong style="color:var(--gold)">${selSlot}</strong> بتاريخ <strong style="color:var(--gold)">${selDate}</strong>`;
+      document.getElementById("waLink").href=`https://wa.me/965${storeData.whatsapp}?text=مرحبا، أرسلت طلباً من متجرك`;
       goTo(4);
-    } catch(e) {
-      alert("حدث خطأ، حاول مرة أخرى");
-      btn.disabled = false;
-      btn.textContent = "✅ تأكيد الطلب";
-    }
+    }catch(e){alert("حدث خطأ");btn.disabled=false;btn.textContent="✨ تأكيد الطلب";}
   };
 
-  window.resetOrder = () => {
-    cart = {}; selectedDate = ""; selectedSlot = ""; selectedPayment = "";
-    userLat = null; userLng = null; userArea = "";
-    products.forEach(p => {
-      const badge = document.getElementById(`badge-${p.id}`);
-      if (badge) badge.style.display = "none";
-    });
-    document.getElementById("cartBtn").style.display = "none";
+  window.resetOrder=()=>{
+    cart={};selDate="";selSlot="";selPay="";lat=null;lng=null;area="";
+    document.getElementById("cartFloat").style.display="none";
+    goTo(1); renderProds();
   };
 
-  function getTheme(category) {
-    const themes = {
-      restaurant: { primary: "#8b4513", light: "#8b451320", headerBg: "linear-gradient(135deg,#2c1810,#8b4513)", emoji: "🍽️" },
-      fashion:    { primary: "#1a1a2e", light: "#1a1a2e20", headerBg: "linear-gradient(135deg,#0f0f1a,#2d2d4e)", emoji: "👗" },
-      sweets:     { primary: "#c0507a", light: "#c0507a20", headerBg: "linear-gradient(135deg,#8b2252,#e8829a)", emoji: "🧁" },
-      beauty:     { primary: "#6b4f8e", light: "#6b4f8e20", headerBg: "linear-gradient(135deg,#2d1a4a,#9b7fc0)", emoji: "💄" },
-      organic:    { primary: "#2d6a4f", light: "#2d6a4f20", headerBg: "linear-gradient(135deg,#1b4332,#52b788)", emoji: "🌿" },
-      general:    { primary: "#1e5f8e", light: "#1e5f8e20", headerBg: "linear-gradient(135deg,#0f2d4a,#3a8fc0)", emoji: "📦" },
-    };
-    return themes[category] || themes.restaurant;
-  }
-
-  loadStore();
+  init();
 </script>
 </body>
 </html>
