@@ -157,7 +157,7 @@
     try {
       if (currentTab === "login") {
         const cred = await signInWithEmailAndPassword(auth, email, password);
-        if (cred.user.email === "Hr.edu.kw@gmail.com") {
+        if (cred.user.email.toLowerCase() === "hr.edu.kw@gmail.com") {
           window.location.href = "admin.html";
         } else {
           window.location.href = "dashboard.html";
