@@ -209,8 +209,21 @@ body { background: var(--black); font-family: 'Noto Kufi Arabic', sans-serif; co
 }
 .toast.success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: var(--green); }
 .toast.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+/* Image upload */
+.img-upload-area {
+  border: 2px dashed rgba(201,168,76,0.2); border-radius: 14px;
+  padding: 20px; text-align: center; cursor: pointer;
+  transition: all 0.25s; margin-bottom: 14px; position: relative; overflow: hidden;
+}
+.img-upload-area:hover { border-color: rgba(201,168,76,0.5); background: rgba(201,168,76,0.04); }
+.img-upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2; }
+.img-upload-icon { font-size: 32px; margin-bottom: 6px; }
+.img-upload-text { color: rgba(245,240,232,0.4); font-size: 12px; font-weight: 600; }
+.img-upload-sub { color: rgba(245,240,232,0.2); font-size: 10px; margin-top: 3px; }
+.img-preview { width: 100%; height: 140px; object-fit: cover; border-radius: 12px; display: none; margin-bottom: 8px; }
+.img-remove { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--red); border-radius: 8px; padding: 5px 12px; font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer; display: none; margin-bottom: 8px; }
+.img-size-warn { color: #f59e0b; font-size: 10px; font-weight: 600; margin-top: 4px; display: none; }
 </style>
-</head>
 <body>
 
 <div class="loading-overlay" id="loadingOverlay">
@@ -239,12 +252,21 @@ body { background: var(--black); font-family: 'Noto Kufi Arabic', sans-serif; co
   <div class="add-card">
     <div class="add-card-title">➕ إضافة منتج جديد</div>
 
-    <!-- Emoji picker -->
+    <!-- Image upload -->
     <div class="field" style="margin-bottom:14px">
-      <label>الإيموجي</label>
-      <div class="emoji-row" id="emojiPicker">
-        🍽️ 🍗 🥘 🍲 🥟 🍜 🥗 🧁 🎂 🍰 🍩 🧇
-        👗 👘 👒 💄 💍 💎 🌹 🌿 🍯 🧴 📦 🛍️
+      <label>📸 صورة المنتج</label>
+      <img id="newImgPreview" class="img-preview" src="" alt=""/>
+      <button id="newImgRemove" class="img-remove" onclick="removeImg('new')">✕ إزالة الصورة</button>
+      <div class="img-upload-area" id="newUploadArea">
+        <input type="file" accept="image/*" onchange="handleImg(event,'new')"/>
+        <div class="img-upload-icon">🖼️</div>
+        <div class="img-upload-text">اضغط لرفع صورة المنتج</div>
+        <div class="img-upload-sub">JPG, PNG — أقل من 500KB</div>
+      </div>
+      <div class="img-size-warn" id="newSizeWarn">⚠️ الصورة كبيرة — جرّب تصغيرها</div>
+      <div style="margin-top:10px">
+        <label style="font-size:10px;color:var(--gold);letter-spacing:1px;font-weight:700">أو اختار إيموجي بدلاً عن الصورة</label>
+        <div class="emoji-row" id="emojiPicker" style="margin-top:8px"></div>
       </div>
     </div>
 
@@ -293,8 +315,21 @@ body { background: var(--black); font-family: 'Noto Kufi Arabic', sans-serif; co
       <button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')">✕</button>
     </div>
 
-    <div class="field form-grid full" style="margin-bottom:14px">
-      <div class="emoji-row" id="editEmojiPicker"></div>
+    <div class="field" style="margin-bottom:14px">
+      <label>📸 صورة المنتج</label>
+      <img id="editImgPreview" class="img-preview" src="" alt=""/>
+      <button id="editImgRemove" class="img-remove" onclick="removeImg('edit')">✕ إزالة الصورة</button>
+      <div class="img-upload-area" id="editUploadArea">
+        <input type="file" accept="image/*" onchange="handleImg(event,'edit')"/>
+        <div class="img-upload-icon">🖼️</div>
+        <div class="img-upload-text">اضغط لتغيير الصورة</div>
+        <div class="img-upload-sub">JPG, PNG — أقل من 500KB</div>
+      </div>
+      <div class="img-size-warn" id="editSizeWarn">⚠️ الصورة كبيرة — جرّب تصغيرها</div>
+      <div style="margin-top:10px">
+        <label style="font-size:10px;color:var(--gold);letter-spacing:1px;font-weight:700">أو اختار إيموجي</label>
+        <div class="emoji-row" id="editEmojiPicker" style="margin-top:8px"></div>
+      </div>
     </div>
 
     <div class="form-grid" style="margin-bottom:12px">
@@ -343,8 +378,55 @@ let editSelectedEmoji = "🍽️";
 let editingId = null;
 let offerActive = false;
 let editOfferActive = false;
+let newImgBase64 = null;
+let editImgBase64 = null;
 
 const EMOJIS = ["🍽️","🍗","🥘","🍲","🥟","🍜","🥗","🧁","🎂","🍰","🍩","🧇","👗","👘","👒","💄","💍","💎","🌹","🌿","🍯","🧴","📦","🛍️"];
+
+// Image handling
+window.handleImg = (event, prefix) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 600000) {
+    document.getElementById(`${prefix}SizeWarn`).style.display = "block";
+    return;
+  }
+  document.getElementById(`${prefix}SizeWarn`).style.display = "none";
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    // Compress image
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const maxW = 600; const maxH = 600;
+      let w = img.width; let h = img.height;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      if (h > maxH) { w = w * maxH / h; h = maxH; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL("image/jpeg", 0.7);
+      if (prefix === "new") newImgBase64 = compressed;
+      else editImgBase64 = compressed;
+      // Show preview
+      const preview = document.getElementById(`${prefix}ImgPreview`);
+      preview.src = compressed; preview.style.display = "block";
+      document.getElementById(`${prefix}ImgRemove`).style.display = "inline-block";
+      document.getElementById(`${prefix}UploadArea`).style.display = "none";
+    };
+    img.src = base64;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.removeImg = (prefix) => {
+  if (prefix === "new") newImgBase64 = null;
+  else editImgBase64 = null;
+  document.getElementById(`${prefix}ImgPreview`).style.display = "none";
+  document.getElementById(`${prefix}ImgPreview`).src = "";
+  document.getElementById(`${prefix}ImgRemove`).style.display = "none";
+  document.getElementById(`${prefix}UploadArea`).style.display = "block";
+};
 
 // Init emoji pickers
 function initEmojis(containerId, onSelect) {
@@ -399,11 +481,13 @@ function renderProducts() {
   }
   list.innerHTML = products.map(p => {
     const discount = p.hasOffer && p.originalPrice
-      ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
-      : 0;
+      ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : 0;
+    const visual = p.image
+      ? `<img src="${p.image}" style="width:56px;height:56px;border-radius:14px;object-fit:cover;border:1px solid rgba(201,168,76,0.15);flex-shrink:0"/>`
+      : `<div class="product-emoji-badge">${p.emoji || "🍽️"}</div>`;
     return `
       <div class="product-item" id="pi-${p.id}">
-        <div class="product-emoji-badge">${p.emoji || "🍽️"}</div>
+        ${visual}
         <div class="product-info">
           <div class="product-name-row">
             <span class="product-name-text">${p.name}</span>
@@ -412,10 +496,7 @@ function renderProducts() {
           <div class="product-desc-text">${p.desc || "بدون وصف"}</div>
           <div class="price-row">
             <span class="price-current">${parseFloat(p.price).toFixed(3)} KWD</span>
-            ${p.hasOffer && p.originalPrice ? `
-              <span class="price-old">${parseFloat(p.originalPrice).toFixed(3)}</span>
-              <span class="discount-badge">-${discount}%</span>
-            ` : ""}
+            ${p.hasOffer && p.originalPrice ? `<span class="price-old">${parseFloat(p.originalPrice).toFixed(3)}</span><span class="discount-badge">-${discount}%</span>` : ""}
           </div>
           ${p.hasOffer && p.offerLabel ? `<div style="color:var(--red);font-size:11px;font-weight:700;margin-top:3px">${p.offerLabel}</div>` : ""}
         </div>
@@ -449,6 +530,7 @@ window.addProduct = async () => {
 
   const data = {
     name, price, emoji: selectedEmoji,
+    image: newImgBase64 || null,
     desc: document.getElementById("newDesc").value.trim(),
     hasOffer: offerActive,
     originalPrice: offerActive ? parseFloat(document.getElementById("newOrigPrice").value)||null : null,
@@ -459,12 +541,13 @@ window.addProduct = async () => {
     const ref = await addDoc(collection(db, "stores", userId, "products"), data);
     products.unshift({ id: ref.id, ...data });
     renderProducts(); updateStats();
-    // Reset form
     document.getElementById("newName").value = "";
     document.getElementById("newPrice").value = "";
     document.getElementById("newDesc").value = "";
     document.getElementById("newOrigPrice").value = "";
     document.getElementById("newOfferLabel").value = "";
+    removeImg("new");
+    newImgBase64 = null;
     if (offerActive) toggleOffer();
     showToast("✅ تم إضافة المنتج بنجاح", "success");
   } catch(e) {
@@ -487,13 +570,24 @@ window.openEdit = (id) => {
   document.getElementById("editOfferLabel").value = p.offerLabel || "";
 
   editSelectedEmoji = p.emoji || "🍽️";
+  editImgBase64 = p.image || null;
+
   document.getElementById("editEmojiPicker").innerHTML = EMOJIS.map(e =>
     `<button class="emoji-opt ${e === editSelectedEmoji ? 'active' : ''}" onclick="selectEditEmoji('${e}',this)">${e}</button>`
   ).join("");
 
+  // Show existing image if any
+  if (p.image) {
+    document.getElementById("editImgPreview").src = p.image;
+    document.getElementById("editImgPreview").style.display = "block";
+    document.getElementById("editImgRemove").style.display = "inline-block";
+    document.getElementById("editUploadArea").style.display = "none";
+  } else {
+    removeImg("edit");
+  }
+
   document.getElementById("editOfferToggle").classList.toggle("active", editOfferActive);
   document.getElementById("editOfferFields").classList.toggle("show", editOfferActive);
-
   document.getElementById("editModal").classList.add("open");
 };
 
@@ -511,6 +605,7 @@ window.saveEdit = async () => {
 
   const data = {
     name, price, emoji: editSelectedEmoji,
+    image: editImgBase64 || null,
     desc: document.getElementById("editDesc").value.trim(),
     hasOffer: editOfferActive,
     originalPrice: editOfferActive ? parseFloat(document.getElementById("editOrigPrice").value)||null : null,
