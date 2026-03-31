@@ -672,16 +672,19 @@ async function render() {
 }
 
 function renderProds() {
-  document.getElementById("productsGrid").innerHTML = products.map(p=>{
+  document.getElementById("productsGrid").innerHTML = products.map((p,i)=>{
     const discount = p.hasOffer && p.originalPrice
       ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100) : 0;
+    const visual = p.image
+      ? `<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`
+      : `<span style="position:relative;z-index:1;font-size:64px">${p.emoji||"🍽️"}</span>`;
     return `
-    <div class="product-card" id="pc-${p.id}">
-      <div class="product-visual">
+    <div class="product-card" id="pc-${p.id}" style="animation-delay:${i*0.08}s">
+      <div class="product-visual" style="position:relative">
         <div class="glow"></div>
-        <span style="position:relative;z-index:1">${p.emoji||"🍽️"}</span>
+        ${visual}
         <div class="qty-badge" id="b-${p.id}"></div>
-        ${p.hasOffer ? `<div style="position:absolute;top:8px;right:8px;background:rgba(239,68,68,0.9);color:white;font-size:9px;font-weight:900;padding:2px 7px;border-radius:50px;z-index:3">🔥 عرض</div>` : ""}
+        ${p.hasOffer ? `<div style="position:absolute;top:8px;right:8px;background:rgba(239,68,68,0.92);color:white;font-size:9px;font-weight:900;padding:2px 7px;border-radius:50px;z-index:3">🔥 عرض</div>` : ""}
       </div>
       <div class="product-body">
         <div class="product-name">${p.name}</div>
