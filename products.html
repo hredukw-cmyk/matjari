@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>متجري — إدارة المنتجات</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;600;700;900&display=swap');
+:root {
+  --gold: #c9a84c; --gold-light: #f0d98a; --gold-dark: #7a5a0a;
+  --black: #050505; --black-2: #0d0d0d; --black-3: #161616; --black-4: #1f1f1f;
+  --white: #f5f0e8; --red: #ef4444; --green: #22c55e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--black); font-family: 'Noto Kufi Arabic', sans-serif; color: var(--white); min-height: 100vh; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes scaleIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* Header */
+.header {
+  background: var(--black-2); border-bottom: 1px solid rgba(201,168,76,0.1);
+  padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;
+  position: sticky; top: 0; z-index: 50;
+}
+.header-logo { color: var(--gold); font-weight: 900; font-size: 17px; }
+.header-nav { display: flex; gap: 10px; }
+.nav-btn {
+  padding: 8px 16px; border-radius: 50px; border: 1px solid;
+  font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s;
+  text-decoration: none; display: inline-block;
+}
+.nav-btn.ghost { border-color: rgba(201,168,76,0.2); background: transparent; color: rgba(245,240,232,0.5); }
+.nav-btn.ghost:hover { border-color: rgba(201,168,76,0.4); color: var(--white); }
+.nav-btn.gold { border-color: var(--gold); background: rgba(201,168,76,0.1); color: var(--gold); }
+
+/* Main */
+.main { max-width: 680px; margin: 0 auto; padding: 28px 16px; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--black-2); border: 1px solid rgba(201,168,76,0.1);
+  border-radius: 14px; padding: 16px; text-align: center;
+}
+.stat-val { font-size: 24px; font-weight: 900; background: linear-gradient(135deg, var(--gold-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.stat-lbl { font-size: 11px; color: rgba(245,240,232,0.4); margin-top: 4px; }
+
+/* Add product form */
+.add-card {
+  background: var(--black-2); border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 20px; padding: 22px; margin-bottom: 24px;
+  animation: fadeUp 0.5s ease;
+}
+.add-card-title {
+  font-weight: 800; font-size: 15px; color: var(--gold);
+  margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+}
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid.full { grid-template-columns: 1fr; }
+
+.field { margin-bottom: 0; }
+.field label { display: block; font-size: 10px; font-weight: 700; color: var(--gold); margin-bottom: 6px; letter-spacing: 1px; }
+.field input, .field textarea, .field select {
+  width: 100%; padding: 11px 14px; border-radius: 10px;
+  border: 1px solid rgba(201,168,76,0.15); background: rgba(255,255,255,0.02);
+  color: var(--white); font-family: inherit; font-size: 13px; outline: none;
+  transition: all 0.25s; resize: none;
+}
+.field input:focus, .field textarea:focus { border-color: rgba(201,168,76,0.5); background: rgba(201,168,76,0.04); box-shadow: 0 0 0 3px rgba(201,168,76,0.06); }
+.field input::placeholder, .field textarea::placeholder { color: rgba(245,240,232,0.2); }
+
+/* Emoji picker */
+.emoji-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.emoji-opt {
+  width: 38px; height: 38px; border-radius: 10px; border: 1px solid rgba(201,168,76,0.15);
+  background: transparent; font-size: 20px; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.emoji-opt:hover { border-color: rgba(201,168,76,0.4); background: rgba(201,168,76,0.08); transform: scale(1.1); }
+.emoji-opt.active { border-color: var(--gold); background: rgba(201,168,76,0.15); }
+
+/* Offer toggle */
+.offer-toggle {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15);
+  border-radius: 10px; cursor: pointer; transition: all 0.2s; margin-top: 12px;
+}
+.offer-toggle.active { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
+.toggle-dot {
+  width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid rgba(239,68,68,0.4);
+  background: transparent; flex-shrink: 0; transition: all 0.25s; position: relative;
+}
+.offer-toggle.active .toggle-dot { background: var(--red); border-color: var(--red); }
+.offer-toggle.active .toggle-dot::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 900; }
+.offer-label { font-size: 13px; font-weight: 700; color: rgba(245,240,232,0.6); }
+.offer-toggle.active .offer-label { color: var(--red); }
+
+.offer-fields { display: none; margin-top: 12px; animation: fadeUp 0.3s ease; }
+.offer-fields.show { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Submit btn */
+.submit-btn {
+  width: 100%; padding: 15px; border: none; border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--black); font-family: inherit; font-weight: 900;
+  font-size: 15px; cursor: pointer; margin-top: 18px;
+  box-shadow: 0 6px 24px rgba(201,168,76,0.25);
+  transition: all 0.25s; letter-spacing: 0.5px;
+}
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(201,168,76,0.35); }
+.submit-btn:disabled { background: var(--black-3); color: rgba(245,240,232,0.2); cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* Products list */
+.products-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.products-title { color: var(--white); font-weight: 800; font-size: 16px; }
+.products-count { color: rgba(245,240,232,0.35); font-size: 12px; }
+
+.products-list { display: flex; flex-direction: column; gap: 12px; }
+
+.product-item {
+  background: var(--black-2); border: 1px solid rgba(201,168,76,0.08);
+  border-radius: 18px; padding: 18px;
+  display: flex; align-items: center; gap: 16px;
+  animation: scaleIn 0.4s ease;
+  transition: border-color 0.25s;
+}
+.product-item:hover { border-color: rgba(201,168,76,0.2); }
+
+.product-emoji-badge {
+  width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--black-3), var(--black-4));
+  border: 1px solid rgba(201,168,76,0.15);
+  display: flex; align-items: center; justify-content: center; font-size: 28px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.product-info { flex: 1; }
+.product-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.product-name-text { font-weight: 800; font-size: 15px; color: var(--white); }
+.offer-badge {
+  background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+  color: var(--red); font-size: 10px; font-weight: 800;
+  padding: 2px 8px; border-radius: 50px;
+}
+.product-desc-text { color: rgba(245,240,232,0.35); font-size: 12px; margin-bottom: 6px; }
+.price-row { display: flex; align-items: center; gap: 8px; }
+.price-current {
+  font-weight: 900; font-size: 15px;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.price-old { font-size: 12px; color: rgba(245,240,232,0.3); text-decoration: line-through; }
+.discount-badge {
+  background: rgba(239,68,68,0.15); color: var(--red);
+  font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 50px;
+}
+
+.product-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.action-btn {
+  width: 34px; height: 34px; border-radius: 10px; border: 1px solid;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; transition: all 0.2s;
+}
+.action-btn.edit { border-color: rgba(201,168,76,0.2); background: transparent; color: var(--gold); }
+.action-btn.edit:hover { background: rgba(201,168,76,0.1); transform: scale(1.05); }
+.action-btn.delete { border-color: rgba(239,68,68,0.2); background: transparent; color: var(--red); }
+.action-btn.delete:hover { background: rgba(239,68,68,0.1); transform: scale(1.05); }
+
+.empty-state { text-align: center; padding: 48px 20px; color: rgba(245,240,232,0.25); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-text { font-size: 14px; }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--black-2); border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 24px; padding: 28px; width: 100%; max-width: 480px;
+  animation: scaleIn 0.35s cubic-bezier(0.34,1.3,0.64,1);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+.modal-title { color: var(--gold); font-weight: 900; font-size: 17px; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.05); border: none; color: rgba(245,240,232,0.5);
+  cursor: pointer; font-size: 16px; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: rgba(255,255,255,0.1); color: var(--white); }
+
+/* Loading */
+.loading-overlay { position: fixed; inset: 0; background: var(--black); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; z-index: 200; }
+.spinner { width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(201,168,76,0.1); border-top-color: var(--gold); animation: spin 1s linear infinite; }
+.loading-txt { color: rgba(245,240,232,0.3); font-size: 13px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 300;
+  padding: 12px 20px; border-radius: 14px; font-weight: 700; font-size: 13px;
+  animation: fadeUp 0.4s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  transition: all 0.3s;
+}
+.toast.success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: var(--green); }
+.toast.error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-txt">جاري التحميل...</div>
+</div>
+
+<div class="header">
+  <div class="header-logo">🛍️ إدارة المنتجات</div>
+  <div class="header-nav">
+    <a href="dashboard.html" class="nav-btn ghost">← الداشبورد</a>
+    <a href="#" id="storeLink" class="nav-btn gold" target="_blank">🔗 عرض المتجر</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Stats -->
+  <div class="stats" id="statsRow">
+    <div class="stat-card"><div class="stat-val" id="totalProducts">0</div><div class="stat-lbl">إجمالي المنتجات</div></div>
+    <div class="stat-card"><div class="stat-val" id="totalOffers">0</div><div class="stat-lbl">عروض نشطة</div></div>
+    <div class="stat-card"><div class="stat-val" id="avgPrice">0</div><div class="stat-lbl">متوسط السعر KWD</div></div>
+  </div>
+
+  <!-- Add Product -->
+  <div class="add-card">
+    <div class="add-card-title">➕ إضافة منتج جديد</div>
+
+    <!-- Emoji picker -->
+    <div class="field" style="margin-bottom:14px">
+      <label>الإيموجي</label>
+      <div class="emoji-row" id="emojiPicker">
+        🍽️ 🍗 🥘 🍲 🥟 🍜 🥗 🧁 🎂 🍰 🍩 🧇
+        👗 👘 👒 💄 💍 💎 🌹 🌿 🍯 🧴 📦 🛍️
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="field"><label>اسم المنتج</label><input type="text" id="newName" placeholder="مثال: مجبوس دجاج"/></div>
+      <div class="field"><label>السعر (KWD)</label><input type="number" id="newPrice" placeholder="0.000" step="0.001" min="0"/></div>
+    </div>
+
+    <div class="field form-grid full" style="margin-bottom:12px">
+      <div class="field"><label>الوصف (اختياري)</label><textarea id="newDesc" rows="2" placeholder="وصف قصير للمنتج..."></textarea></div>
+    </div>
+
+    <!-- Offer toggle -->
+    <div class="offer-toggle" id="offerToggle" onclick="toggleOffer()">
+      <div class="toggle-dot"></div>
+      <div class="offer-label">🔥 تفعيل عرض خاص على هذا المنتج</div>
+    </div>
+
+    <div class="offer-fields" id="offerFields">
+      <div class="field"><label>السعر الأصلي (قبل الخصم)</label><input type="number" id="newOrigPrice" placeholder="0.000" step="0.001"/></div>
+      <div class="field"><label>نص العرض</label><input type="text" id="newOfferLabel" placeholder="مثال: خصم 20% 🔥"/></div>
+    </div>
+
+    <button class="submit-btn" id="addBtn" onclick="addProduct()">✨ إضافة المنتج</button>
+  </div>
+
+  <!-- Products list -->
+  <div class="products-header">
+    <div class="products-title">منتجاتك</div>
+    <div class="products-count" id="productsCount">0 منتجات</div>
+  </div>
+  <div class="products-list" id="productsList">
+    <div class="empty-state">
+      <div class="empty-icon">🛍️</div>
+      <div class="empty-text">لا توجد منتجات بعد</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✏️ تعديل المنتج</div>
+      <button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')">✕</button>
+    </div>
+
+    <div class="field form-grid full" style="margin-bottom:14px">
+      <div class="emoji-row" id="editEmojiPicker"></div>
+    </div>
+
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="field"><label>اسم المنتج</label><input type="text" id="editName"/></div>
+      <div class="field"><label>السعر (KWD)</label><input type="number" id="editPrice" step="0.001"/></div>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>الوصف</label>
+      <textarea id="editDesc" rows="2"></textarea>
+    </div>
+
+    <div class="offer-toggle" id="editOfferToggle" onclick="toggleEditOffer()">
+      <div class="toggle-dot"></div>
+      <div class="offer-label">🔥 تفعيل عرض خاص</div>
+    </div>
+    <div class="offer-fields" id="editOfferFields">
+      <div class="field"><label>السعر الأصلي</label><input type="number" id="editOrigPrice" step="0.001"/></div>
+      <div class="field"><label>نص العرض</label><input type="text" id="editOfferLabel" placeholder="خصم 20% 🔥"/></div>
+    </div>
+
+    <button class="submit-btn" onclick="saveEdit()" style="margin-top:18px">💾 حفظ التعديلات</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyA9aysxwa-S7GmRbBxjOTrjgOG4_c3fT4k",
+  authDomain: "matgary-2f25f.firebaseapp.com",
+  projectId: "matgary-2f25f",
+  storageBucket: "matgary-2f25f.firebasestorage.app",
+  messagingSenderId: "360734383265",
+  appId: "1:360734383265:web:e9dbf5f3048fecb76ea4e0",
+});
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let userId = null;
+let products = [];
+let selectedEmoji = "🍽️";
+let editSelectedEmoji = "🍽️";
+let editingId = null;
+let offerActive = false;
+let editOfferActive = false;
+
+const EMOJIS = ["🍽️","🍗","🥘","🍲","🥟","🍜","🥗","🧁","🎂","🍰","🍩","🧇","👗","👘","👒","💄","💍","💎","🌹","🌿","🍯","🧴","📦","🛍️"];
+
+// Init emoji pickers
+function initEmojis(containerId, onSelect) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = EMOJIS.map(e =>
+    `<button class="emoji-opt ${e === selectedEmoji ? 'active' : ''}" onclick="(${onSelect.toString()})('${e}',this)">${e}</button>`
+  ).join("");
+}
+
+// Auth check
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = "index.html"; return; }
+  userId = user.uid;
+
+  // Get store slug for link
+  const storeDoc = await getDoc(doc(db, "stores", userId));
+  if (storeDoc.exists()) {
+    const slug = storeDoc.data().slug;
+    document.getElementById("storeLink").href = `store.html?store=${slug}`;
+  }
+
+  initEmojis("emojiPicker", (e, btn) => {
+    selectedEmoji = e;
+    document.querySelectorAll("#emojiPicker .emoji-opt").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  });
+
+  await loadProducts();
+  document.getElementById("loadingOverlay").style.display = "none";
+});
+
+async function loadProducts() {
+  const snap = await getDocs(collection(db, "stores", userId, "products"));
+  products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderProducts();
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById("totalProducts").textContent = products.length;
+  document.getElementById("totalOffers").textContent = products.filter(p => p.hasOffer).length;
+  const avg = products.length ? (products.reduce((s,p) => s + parseFloat(p.price||0), 0) / products.length).toFixed(3) : "0.000";
+  document.getElementById("avgPrice").textContent = avg;
+  document.getElementById("productsCount").textContent = `${products.length} منتجات`;
+}
+
+function renderProducts() {
+  const list = document.getElementById("productsList");
+  if (!products.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🛍️</div><div class="empty-text">لا توجد منتجات بعد — أضف أول منتج!</div></div>`;
+    return;
+  }
+  list.innerHTML = products.map(p => {
+    const discount = p.hasOffer && p.originalPrice
+      ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
+      : 0;
+    return `
+      <div class="product-item" id="pi-${p.id}">
+        <div class="product-emoji-badge">${p.emoji || "🍽️"}</div>
+        <div class="product-info">
+          <div class="product-name-row">
+            <span class="product-name-text">${p.name}</span>
+            ${p.hasOffer ? `<span class="offer-badge">🔥 عرض خاص</span>` : ""}
+          </div>
+          <div class="product-desc-text">${p.desc || "بدون وصف"}</div>
+          <div class="price-row">
+            <span class="price-current">${parseFloat(p.price).toFixed(3)} KWD</span>
+            ${p.hasOffer && p.originalPrice ? `
+              <span class="price-old">${parseFloat(p.originalPrice).toFixed(3)}</span>
+              <span class="discount-badge">-${discount}%</span>
+            ` : ""}
+          </div>
+          ${p.hasOffer && p.offerLabel ? `<div style="color:var(--red);font-size:11px;font-weight:700;margin-top:3px">${p.offerLabel}</div>` : ""}
+        </div>
+        <div class="product-actions">
+          <button class="action-btn edit" onclick="openEdit('${p.id}')" title="تعديل">✏️</button>
+          <button class="action-btn delete" onclick="deleteProduct('${p.id}')" title="حذف">🗑️</button>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+window.toggleOffer = () => {
+  offerActive = !offerActive;
+  document.getElementById("offerToggle").classList.toggle("active", offerActive);
+  document.getElementById("offerFields").classList.toggle("show", offerActive);
+};
+
+window.toggleEditOffer = () => {
+  editOfferActive = !editOfferActive;
+  document.getElementById("editOfferToggle").classList.toggle("active", editOfferActive);
+  document.getElementById("editOfferFields").classList.toggle("show", editOfferActive);
+};
+
+window.addProduct = async () => {
+  const name = document.getElementById("newName").value.trim();
+  const price = parseFloat(document.getElementById("newPrice").value);
+  if (!name || isNaN(price)) { showToast("الرجاء إدخال الاسم والسعر", "error"); return; }
+
+  const btn = document.getElementById("addBtn");
+  btn.disabled = true; btn.textContent = "⏳ جاري الإضافة...";
+
+  const data = {
+    name, price, emoji: selectedEmoji,
+    desc: document.getElementById("newDesc").value.trim(),
+    hasOffer: offerActive,
+    originalPrice: offerActive ? parseFloat(document.getElementById("newOrigPrice").value)||null : null,
+    offerLabel: offerActive ? document.getElementById("newOfferLabel").value.trim() : "",
+  };
+
+  try {
+    const ref = await addDoc(collection(db, "stores", userId, "products"), data);
+    products.unshift({ id: ref.id, ...data });
+    renderProducts(); updateStats();
+    // Reset form
+    document.getElementById("newName").value = "";
+    document.getElementById("newPrice").value = "";
+    document.getElementById("newDesc").value = "";
+    document.getElementById("newOrigPrice").value = "";
+    document.getElementById("newOfferLabel").value = "";
+    if (offerActive) toggleOffer();
+    showToast("✅ تم إضافة المنتج بنجاح", "success");
+  } catch(e) {
+    showToast("حدث خطأ أثناء الإضافة", "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "✨ إضافة المنتج";
+  }
+};
+
+window.openEdit = (id) => {
+  const p = products.find(p => p.id === id);
+  if (!p) return;
+  editingId = id;
+  editOfferActive = p.hasOffer || false;
+
+  document.getElementById("editName").value = p.name;
+  document.getElementById("editPrice").value = p.price;
+  document.getElementById("editDesc").value = p.desc || "";
+  document.getElementById("editOrigPrice").value = p.originalPrice || "";
+  document.getElementById("editOfferLabel").value = p.offerLabel || "";
+
+  editSelectedEmoji = p.emoji || "🍽️";
+  document.getElementById("editEmojiPicker").innerHTML = EMOJIS.map(e =>
+    `<button class="emoji-opt ${e === editSelectedEmoji ? 'active' : ''}" onclick="selectEditEmoji('${e}',this)">${e}</button>`
+  ).join("");
+
+  document.getElementById("editOfferToggle").classList.toggle("active", editOfferActive);
+  document.getElementById("editOfferFields").classList.toggle("show", editOfferActive);
+
+  document.getElementById("editModal").classList.add("open");
+};
+
+window.selectEditEmoji = (e, btn) => {
+  editSelectedEmoji = e;
+  document.querySelectorAll("#editEmojiPicker .emoji-opt").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+};
+
+window.saveEdit = async () => {
+  if (!editingId) return;
+  const name = document.getElementById("editName").value.trim();
+  const price = parseFloat(document.getElementById("editPrice").value);
+  if (!name || isNaN(price)) { showToast("الرجاء إدخال الاسم والسعر", "error"); return; }
+
+  const data = {
+    name, price, emoji: editSelectedEmoji,
+    desc: document.getElementById("editDesc").value.trim(),
+    hasOffer: editOfferActive,
+    originalPrice: editOfferActive ? parseFloat(document.getElementById("editOrigPrice").value)||null : null,
+    offerLabel: editOfferActive ? document.getElementById("editOfferLabel").value.trim() : "",
+  };
+
+  try {
+    await updateDoc(doc(db, "stores", userId, "products", editingId), data);
+    const idx = products.findIndex(p => p.id === editingId);
+    if (idx !== -1) products[idx] = { id: editingId, ...data };
+    renderProducts(); updateStats();
+    document.getElementById("editModal").classList.remove("open");
+    showToast("✅ تم حفظ التعديلات", "success");
+  } catch(e) { showToast("حدث خطأ أثناء الحفظ", "error"); }
+};
+
+window.deleteProduct = async (id) => {
+  if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
+  try {
+    await deleteDoc(doc(db, "stores", userId, "products", id));
+    products = products.filter(p => p.id !== id);
+    const el = document.getElementById(`pi-${id}`);
+    if (el) { el.style.opacity = "0"; el.style.transform = "scale(0.9)"; el.style.transition = "all 0.3s"; setTimeout(() => { renderProducts(); updateStats(); }, 300); }
+    showToast("🗑️ تم حذف المنتج", "success");
+  } catch(e) { showToast("حدث خطأ أثناء الحذف", "error"); }
+};
+
+window.closeModal = (e) => { if (e.target.id === "editModal") document.getElementById("editModal").classList.remove("open"); };
+
+function showToast(msg, type = "success") {
+  const t = document.createElement("div");
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = "0"; t.style.transform = "translateY(10px)"; setTimeout(() => t.remove(), 300); }, 2500);
+}
+</script>
+</body>
+</html>
