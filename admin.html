@@ -24,7 +24,7 @@
     border-right: 2px solid transparent;
   }
   .nav-item.active { color: #fbbf24; background: rgba(251,191,36,0.06); border-right-color: #fbbf24; font-weight: 700; }
-  .main { flex: 1; padding: 28px; overflow: auto; }
+  .main { flex: 1; padding: 28px; overflow: auto; min-width: 0; }
   .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
   .stat-card { background: #0f0f0f; border: 1px solid #141414; border-radius: 16px; padding: 18px; }
   .stat-icon { font-size: 24px; margin-bottom: 10px; }
@@ -32,7 +32,7 @@
   .stat-lbl { font-size: 11px; color: #333; margin-top: 3px; }
   .filters { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
   .search-input {
-    flex: 1; min-width: 200px; background: #0f0f0f; border: 1px solid #141414;
+    flex: 1; min-width: 160px; background: #0f0f0f; border: 1px solid #141414;
     border-radius: 10px; padding: 10px 14px; color: white;
     font-family: inherit; font-size: 13px; outline: none;
   }
@@ -42,8 +42,8 @@
     font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s;
   }
   .filter-btn.active { border-color: #fbbf24; background: #fbbf2410; color: #fbbf24; }
-  .table-wrap { background: #0f0f0f; border: 1px solid #141414; border-radius: 20px; overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; }
+  .table-wrap { background: #0f0f0f; border: 1px solid #141414; border-radius: 20px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 500px; }
   thead tr { background: #050505; }
   th { padding: 14px 16px; text-align: right; font-size: 11px; font-weight: 700; color: #333; border-bottom: 1px solid #141414; }
   tbody tr { border-bottom: 1px solid #141414; cursor: pointer; transition: background 0.15s; }
@@ -51,12 +51,16 @@
   td { padding: 14px 16px; }
   .badge { padding: 3px 10px; border-radius: 50px; font-size: 12px; font-weight: 700; }
   .status-dot { padding: 3px 10px; border-radius: 50px; font-size: 12px; font-weight: 700; }
-  .action-btn {
-    border: 1px solid; border-radius: 8px; padding: 5px 12px;
-    font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
-  }
+  .action-btn { border: 1px solid; border-radius: 8px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
   .empty { text-align: center; padding: 40px; color: #333; font-size: 14px; }
   .loading { text-align: center; padding: 40px; color: #fbbf24; font-size: 16px; font-weight: 700; }
+
+  /* Mobile header */
+  .mobile-header { display: none; }
+
+  /* Sidebar overlay on mobile */
+  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 149; }
+  .sidebar-overlay.open { display: block; }
 
   /* Modal */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 100; padding: 20px; }
@@ -78,6 +82,42 @@
   .login-title { color: white; font-weight: 900; font-size: 20px; margin-bottom: 6px; }
   .login-sub { color: #444; font-size: 13px; margin-bottom: 24px; }
   .login-field { margin-bottom: 16px; }
+
+  /* ─── Mobile Responsive ─── */
+  @media (max-width: 768px) {
+    body { flex-direction: column; }
+
+    .sidebar {
+      position: fixed; top: 0; right: -240px; height: 100vh;
+      width: 240px; z-index: 150; transition: right 0.3s ease;
+      overflow-y: auto;
+    }
+    .sidebar.open { right: 0; }
+
+    .mobile-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; background: #050505;
+      border-bottom: 1px solid #141414;
+      position: sticky; top: 0; z-index: 50; width: 100%;
+    }
+    .mobile-logo { color: #fbbf24; font-weight: 900; font-size: 16px; }
+    .hamburger {
+      background: none; border: 1px solid #1f1f1f; border-radius: 8px;
+      padding: 8px 10px; color: #fbbf24; cursor: pointer;
+      font-size: 18px; line-height: 1;
+    }
+
+    .main { padding: 16px; width: 100%; }
+
+    .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-val { font-size: 18px; }
+    .stat-icon { font-size: 20px; margin-bottom: 6px; }
+  }
+
+  @media (max-width: 400px) {
+    .stats { grid-template-columns: 1fr 1fr; }
+    .filter-btn { font-size: 11px; padding: 7px 10px; }
+  }
   .login-field label { display: block; color: #555; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
   .login-field input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #1f1f1f; background: #0f0f0f; color: white; font-family: inherit; font-size: 13px; outline: none; }
   .login-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(90deg,#f59e0b,#fbbf24); color: #0a0a0a; font-family: inherit; font-weight: 800; font-size: 15px; cursor: pointer; }
@@ -99,8 +139,19 @@
 </div>
 
 <!-- Admin Dashboard -->
-<div id="adminDashboard" style="display:none;width:100%;display:none;flex-direction:row">
-  <div class="sidebar">
+<div id="adminDashboard" style="display:none;width:100%;flex-direction:column">
+
+  <!-- Mobile Header -->
+  <div class="mobile-header">
+    <div class="mobile-logo">🛍️ متجري — الأدمن</div>
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  </div>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <div style="display:flex;flex:1;min-height:0">
+  <div class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-title">🛍️ متجري</div>
       <div class="sidebar-logo-sub">لوحة الأدمن</div>
@@ -142,6 +193,7 @@
       </table>
     </div>
   </div>
+  </div><!-- end inner flex -->
 </div>
 
 <!-- Modal -->
@@ -229,8 +281,15 @@
 
   function showDashboard() {
     document.getElementById("adminLogin").style.display = "none";
-    document.getElementById("adminDashboard").style.display = "flex";
+    const dash = document.getElementById("adminDashboard");
+    dash.style.display = "flex";
+    dash.style.flexDirection = "column";
   }
+
+  window.toggleSidebar = () => {
+    document.getElementById("sidebar").classList.toggle("open");
+    document.getElementById("sidebarOverlay").classList.toggle("open");
+  };
 
   function loadStores() {
     const q = query(collection(db, "stores"), orderBy("createdAt", "desc"));
